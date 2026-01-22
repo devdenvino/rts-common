@@ -22,3 +22,12 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Build output
+*.tsbuildinfo
+
+# Documentation drafts and AI-generated temp files
+docs/.drafts/
+*.draft.md
+*.temp.md
+*_DRAFT.md

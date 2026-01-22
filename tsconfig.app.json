@@ -23,7 +23,9 @@
     "erasableSyntaxOnly": true,
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true,
-
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    /* Path aliases */
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]

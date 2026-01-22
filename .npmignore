@@ -1,0 +1,63 @@
+# Development and test files - exclude from npm package
+src/routes/
+src/main.tsx
+src/routeTree.gen.ts
+src/components/test/
+public/
+
+# Config files
+*.config.ts
+*.config.js
+tsconfig*.json
+components.json
+vite*.config.ts
+tsup.config.ts
+eslint.config.js
+
+# Development files
+.vscode/
+.idea/
+*.log
+*.tsbuildinfo
+node_modules/
+
+# Test files
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+**/*.stories.tsx
+__tests__/
+coverage/
+
+# Documentation (keep README, LICENSE, CHANGELOG)
+CONTRIBUTING.md
+PUBLISHING.md
+
+# Build artifacts
+dist-ssr/
+
+# Environment files
+.env*
+!.env.example
+
+# Git files
+.git/
+.gitignore
+.gitattributes
+
+# CI/CD
+.github/
+
+# Development HTML
+index.html
+
+# Lock files (users should use their own)
+pnpm-lock.yaml
+yarn.lock
+package-lock.json
+
+# Misc
+.DS_Store
+*.local
+

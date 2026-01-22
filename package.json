@@ -1,26 +1,141 @@
 {
-  "name": "rts-common",
-  "private": true,
-  "version": "0.0.0",
+  "name": "@devdenvino/rts-common",
+  "private": false,
+  "version": "0.1.0",
+  "description": "Shared component library and utilities for micro-frontend applications",
+  "keywords": [
+    "react",
+    "components",
+    "ui",
+    "micro-frontend",
+    "mfe",
+    "shadcn",
+    "radix-ui",
+    "tailwind"
+  ],
+  "license": "MIT",
+  "author": "DevDenvino",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/devdenvino/rts-common.git"
+  },
+  "bugs": {
+    "url": "https://github.com/devdenvino/rts-common/issues"
+  },
+  "homepage": "https://github.com/devdenvino/rts-common#readme",
   "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "packageManager": "pnpm@10.24.0",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "exports": {
+    "./components/magicui": {
+      "types": "./dist/components/magicui/index.d.ts",
+      "import": "./dist/components/magicui/index.js"
+    },
+    "./components/animate-ui": {
+      "types": "./dist/components/animate-ui/index.d.ts",
+      "import": "./dist/components/animate-ui/index.js"
+    },
+    "./components/ui": {
+      "types": "./dist/components/ui/index.d.ts",
+      "import": "./dist/components/ui/index.js"
+    },
+    "./components/ui/custom": {
+      "types": "./dist/components/ui/custom/index.d.ts",
+      "import": "./dist/components/ui/custom/index.js"
+    },
+    "./hooks/use-auth": {
+      "types": "./dist/hooks/use-auth.d.ts",
+      "import": "./dist/hooks/use-auth.js"
+    },
+    "./lib/polyfills": {
+      "types": "./dist/lib/polyfills/index.d.ts",
+      "import": "./dist/lib/polyfills/index.js"
+    },
+    "./lucide-react": {
+      "types": "./dist/lucide-react.d.ts",
+      "import": "./dist/lucide-react.js"
+    },
+    "./tabler-icons-react": {
+      "types": "./dist/tabler-icons-react.d.ts",
+      "import": "./dist/tabler-icons-react.js"
+    },
+    "./tanstack-react-table": {
+      "types": "./dist/tanstack-react-table.d.ts",
+      "import": "./dist/tanstack-react-table.js"
+    },
+    "./motion": {
+      "types": "./dist/motion.d.ts",
+      "import": "./dist/motion.js"
+    },
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./style.css": "./dist/style.css",
+    "./themes.css": "./dist/themes.css",
+    "./custom.css": "./dist/custom.css",
+    "./tailwind.css": "./dist/tailwind.css",
+    "./styles/index.css": "./src/styles/index.css",
+    "./styles/themes.css": "./src/styles/themes.css",
+    "./styles/custom.css": "./src/styles/custom.css",
+    "./styles/tailwind.css": "./src/styles/tailwind.css",
+    "./styles/base.css": "./src/styles/base.css",
+    "./styles/config.css": "./src/styles/config.css",
+    "./tailwind.config": "./tailwind.config.js"
+  },
+  "files": [
+    "dist",
+    "src/index.css",
+    "src/styles",
+    "tailwind.config.js"
+  ],
+  "typesVersions": {
+    "*": {
+      "types": [
+        "./dist/lib/models/global.d.ts"
+      ]
+    }
+  },
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsup && vite build --config vite.css.config.ts",
+    "build:js": "tsup",
+    "build:css": "vite build --config vite.css.config.ts",
+    "build:old": "vite build && tsc -p tsconfig.build.json",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "prepublishOnly": "pnpm run build:js && pnpm run build:css",
+    "test:build": "pnpm run build:js && pnpm run build:css && ls -la dist",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
+  },
+  "peerDependencies": {
+    "@tanstack/react-router": "^1.144.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "tw-animate-css": "^1.4.0"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
+    "@novu/react": "^3.11.2",
     "@radix-ui/react-accordion": "^1.2.12",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-aspect-ratio": "^1.1.8",
-    "@radix-ui/react-avatar": "^1.1.11",
+    "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-checkbox": "^1.3.3",
     "@radix-ui/react-collapsible": "^1.1.12",
     "@radix-ui/react-context-menu": "^2.2.16",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
     "@radix-ui/react-hover-card": "^1.1.15",
+    "@radix-ui/react-icons": "^1.3.2",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-menubar": "^1.1.16",
     "@radix-ui/react-navigation-menu": "^1.2.14",
@@ -29,37 +144,48 @@
     "@radix-ui/react-radio-group": "^1.3.8",
     "@radix-ui/react-scroll-area": "^1.2.10",
     "@radix-ui/react-select": "^2.2.6",
-    "@radix-ui/react-separator": "^1.1.8",
+    "@radix-ui/react-separator": "^1.1.7",
     "@radix-ui/react-slider": "^1.3.6",
-    "@radix-ui/react-slot": "^1.2.4",
+    "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-toggle": "^1.1.10",
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
-    "@tailwindcss/vite": "^4.1.18",
+    "@tabler/icons-react": "^3.36.1",
+    "@tailwindcss/vite": "^4.1.14",
+    "@tanstack/react-query": "^5.90.8",
+    "@tanstack/react-router-devtools": "^1.136.6",
+    "@tanstack/react-table": "^8.21.3",
+    "@types/node-forge": "^1.3.14",
+    "axios": "^1.13.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",
     "input-otp": "^1.4.2",
-    "lucide-react": "^0.562.0",
+    "jotai": "^2.15.0",
+    "jwt-decode": "^4.0.0",
+    "lucide-react": "^0.545.0",
     "next-themes": "^0.4.6",
-    "react": "^19.2.0",
+    "node-forge": "^1.3.3",
+    "radix-ui": "^1.4.3",
     "react-day-picker": "^9.13.0",
-    "react-dom": "^19.2.0",
-    "react-hook-form": "^7.71.1",
-    "react-resizable-panels": "^4.4.1",
+    "react-hook-form": "^7.70.0",
+    "react-oidc-context": "^3.3.0",
+    "react-resizable-panels": "^3.0.6",
     "recharts": "2.15.4",
     "sonner": "^2.0.7",
-    "tailwind-merge": "^3.4.0",
-    "tailwindcss": "^4.1.18",
+    "tailwind-merge": "^3.3.1",
+    "tailwindcss": "^4.1.14",
     "vaul": "^1.1.2",
     "zod": "^4.3.5"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
+    "@tanstack/react-router": "^1.144.0",
+    "@tanstack/router-plugin": "^1.145.2",
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
@@ -68,9 +194,11 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
-    "tw-animate-css": "^1.4.0",
+    "motion": "^12.25.0",
+    "tsup": "^8.0.0",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.46.4",
-    "vite": "^7.2.4"
+    "vite": "^7.2.4",
+    "vitepress": "^1.6.4"
   }
 }
