@@ -18,8 +18,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { cn } from '@/lib/utils';
 import { type Column } from '@tanstack/react-table';
-import { useNavigate, useSearch } from '@tanstack/react-router';
-import { type ReactElement } from 'react';
+import { type ReactElement, useState, useEffect } from 'react';
 
 export interface DataTableFacetedFilterOption {
   label: string;
@@ -35,6 +34,7 @@ interface DataTableFacetedFilterProps<TData, TValue> {
   options: DataTableFacetedFilterOption[];
   icon: ReactElement;
   tableId?: string; // Optional namespace for search params
+  singleSelect?: boolean;
 }
 
 export function DataTableFacetedFilter<TData, TValue>({
@@ -42,15 +42,27 @@ export function DataTableFacetedFilter<TData, TValue>({
   title,
   options,
   icon,
-  tableId,
+  singleSelect,
 }: DataTableFacetedFilterProps<TData, TValue>) {
-  const navigate = useNavigate();
-  const searchParams = useSearch({ strict: false }) as { [key: string]: string };
   const facets = column?.getFacetedUniqueValues();
-  const selectedValues = new Set(column?.getFilterValue() as string[]);
-  
-  // Helper to create namespaced param key
-  const getParamKey = (key: string) => tableId ? `${tableId}_${key}` : key;
+
+
+
+  const filterValue = column?.getFilterValue() as string[];
+  const [selectedValues, setSelectedValues] = useState<Set<string>>(
+    new Set(filterValue || [])
+  );
+
+  useEffect(() => {
+    const newSet = new Set(filterValue || []);
+    // Simple equality check to avoid re-render loop if sets are effectively equal
+    const areSetsEqual = (a: Set<string>, b: Set<string>) =>
+      a.size === b.size && [...a].every(value => b.has(value));
+
+    if (!areSetsEqual(newSet, selectedValues)) {
+      setSelectedValues(newSet);
+    }
+  }, [filterValue, selectedValues]);
 
   return (
     <Popover>
@@ -103,42 +115,43 @@ export function DataTableFacetedFilter<TData, TValue>({
                 const isSelected = selectedValues.has(option.value);
                 return (
                   <CommandItem
-                    key={option.value}
+                    key={`${option.value}-${isSelected}`}
                     onSelect={() => {
-                      if (isSelected) {
-                        selectedValues.delete(option.value);
+                      let newSet: Set<string>;
+
+                      if (singleSelect) {
+                        newSet = new Set();
+                        if (!isSelected) {
+                          newSet.add(option.value);
+                        }
                       } else {
-                        selectedValues.add(option.value);
+                        newSet = new Set(selectedValues);
+                        if (isSelected) {
+                          newSet.delete(option.value);
+                        } else {
+                          newSet.add(option.value);
+                        }
                       }
-                      const filterValues = Array.from(selectedValues);
+
+                      const filterValues = Array.from(newSet);
+                      setSelectedValues(newSet);
+
+                      // Update Table state - DataTable will handle the URL sync centrally
                       column?.setFilterValue(
                         filterValues.length ? filterValues : undefined
                       );
-                      if (title) {
-                        const paramKey = getParamKey(title);
-                        const updatedParams = { ...searchParams };
-                        if (filterValues.length === 0) {
-                          delete updatedParams[paramKey];
-                        } else {
-                          updatedParams[paramKey] = filterValues.toString();
-                        }
-                        navigate({
-                          search: updatedParams as any,
-                          replace: true,
-                        });
-                      }
                     }}
                   >
                     <div
                       className={cn(
-                        'mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary',
+                        'mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary transition-colors',
                         isSelected
-                          ? 'bg-primary text-primary-foreground'
+                          ? 'bg-primary border-primary'
                           : 'opacity-50 [&_svg]:invisible'
                       )}
                     >
                       {isSelected && (
-                        <Icons.checkIcon className={cn('h-4 w-4')} />
+                        <Icons.checkIcon className={cn('h-3.5 w-3.5 text-white')} />
                       )}
                     </div>
                     {option.icon && (
@@ -161,17 +174,6 @@ export function DataTableFacetedFilter<TData, TValue>({
                   <CommandItem
                     onSelect={() => {
                       column?.setFilterValue(undefined);
-                      if (title) {
-                        const paramKey = getParamKey(title);
-                        if (searchParams[paramKey]) {
-                          const updatedParams = { ...searchParams };
-                          delete updatedParams[paramKey];
-                          navigate({
-                            search: updatedParams as any,
-                            replace: true,
-                          });
-                        }
-                      }
                     }}
                     className='justify-center text-center'
                   >

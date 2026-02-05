@@ -5,12 +5,12 @@ on:
     branches:
       - main
     tags-ignore:
-      - '**'
+      - "**"
     paths:
-      - 'docs/**'
-      - '.github/workflows/deploy-docs.yml'
-      - 'package.json'
-      - 'pnpm-lock.yaml'
+      - "docs/**"
+      - ".github/workflows/deploy-docs.yml"
+      - "package.json"
+      - "pnpm-lock.yaml"
   workflow_dispatch:
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
@@ -36,7 +36,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v3
@@ -62,6 +62,14 @@ jobs:
 
       - name: Build documentation
         run: pnpm run docs:build
+
+      - name: Build Storybook
+        run: pnpm run build-storybook
+
+      - name: Merge Storybook into Docs
+        run: |
+          mkdir -p docs/.vitepress/dist/storybook
+          cp -r storybook-static/* docs/.vitepress/dist/storybook/
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

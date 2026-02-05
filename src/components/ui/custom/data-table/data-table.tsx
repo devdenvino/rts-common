@@ -24,20 +24,75 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { DataTablePagination } from './data-table-pagination';
 import { DataTableToolbar, type IDataTableToolBarProps } from './data-table-toolbar';
 import { useNavigate, useSearch } from '@tanstack/react-router';
 
 interface IDataTableProps<TData, TValue> extends IDataTableToolBarProps {
+  /**
+   * Definition of columns to display in the table
+   */
   columns: ColumnDef<TData, TValue>[];
+  /**
+   * The data to be rendered in the table
+   */
   data: TData[];
+  /**
+   * Columns to hide by default
+   */
   defaultHiddenColumns?: string[];
+  /**
+   * Initial sorting state
+   */
   sortingState?: SortingState;
+  /**
+   * Whether to hide the pagination controls
+   * @default false
+   */
   hidePagination?: boolean;
-  tableId?: string; // Optional namespace for search params when multiple tables on same page
+  /**
+   * Optional namespace for search params when multiple tables exist on the same page.
+   * This prefixes all filtering/sorting URL parameters with the ID.
+   */
+  /**
+   * Optional control for server-side pagination.
+   * If true, the table will not paginate automatically and will expect data to be pre-paginated.
+   */
+  manualPagination?: boolean;
+  /**
+   * Optional control for server-side sorting.
+   * If true, the table will not sort automatically and will expect data to be pre-sorted.
+   */
+  manualSorting?: boolean;
+  /**
+   * Optional control for server-side filtering.
+   * If true, the table will not filter automatically and will expect data to be pre-filtered.
+   */
+  manualFiltering?: boolean;
+  /**
+   * Total number of rows in the dataset (for server-side pagination).
+   */
+  rowCount?: number;
+  /**
+   * Total number of pages (alternative to rowCount for server-side pagination).
+   */
+  pageCount?: number;
 }
 
+/**
+ * A powerful, data-driven table component built on top of TanStack Table.
+ * Supports filtering, sorting, pagination, and URL state synchronization.
+ *
+ * @example
+ * ```tsx
+ * <DataTable
+ *   data={users}
+ *   columns={columns}
+ *   tableId="users-table"
+ * />
+ * ```
+ */
 export function DataTable<TData, TValue>({
   columns,
   data,
@@ -48,18 +103,47 @@ export function DataTable<TData, TValue>({
   sortingState,
   hidePagination = false,
   tableId,
+  manualPagination,
+  manualSorting,
+  manualFiltering,
+  rowCount,
+  pageCount,
 }: IDataTableProps<TData, TValue>) {
   const navigate = useNavigate();
-  const searchParams = useSearch({ strict: false }) as any;
-  
+  // We use strict: false to allow accessing arbitrary search params for filtering
+  const searchParams = useSearch({ strict: false }) as Record<string, unknown>;
+
   // Helper functions to namespace search params when tableId is provided
   const getParamKey = (key: string) => tableId ? `${tableId}_${key}` : key;
-  const getFilterValue = (key: string) => searchParams?.[getParamKey(key)];
-  
+  const getFilterFromUrl = (key: string) => searchParams?.[getParamKey(key)] as string | undefined;
+
   const [rowSelection, setRowSelection] = useState({});
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [globalFilter, setGlobalFilter] = useState<string>(getFilterValue('globalFilter') || '');
+
+  // Track the last state we explicitly set from a user action to avoid race conditions with URL sync
+  const lastLocalUpdateRef = useRef<string>('');
+
+  // Initialize column filters from URL with case-insensitivity
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(() => {
+    const initialFilters: ColumnFiltersState = [];
+    facetedFilterColumns?.forEach((filterColumn) => {
+      const targetKey = getParamKey(filterColumn.colName);
+      const actualKey = Object.keys(searchParams || {}).find(
+        (k) => k.toLowerCase() === targetKey.toLowerCase()
+      );
+      const colValue = actualKey ? searchParams[actualKey] : undefined;
+
+      if (colValue && typeof colValue === 'string') {
+        initialFilters.push({
+          id: filterColumn.colName,
+          value: colValue.split(','),
+        });
+      }
+    });
+    return initialFilters;
+  });
+
+  const [globalFilter, setGlobalFilter] = useState<string>(getFilterFromUrl('globalFilter') || '');
   const [sorting, setSorting] = useState<SortingState>(sortingState || []);
   const [expanded, setExpanded] = useState<ExpandedState>({});
 
@@ -74,12 +158,16 @@ export function DataTable<TData, TValue>({
       expanded,
       globalFilter,
     },
+    manualPagination,
+    manualSorting,
+    manualFiltering,
+    rowCount,
+    pageCount,
     onExpandedChange: setExpanded,
     enableRowSelection: true,
     enableGlobalFilter: true,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
     onColumnVisibilityChange: setColumnVisibility,
     getCoreRowModel: getCoreRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
@@ -90,47 +178,99 @@ export function DataTable<TData, TValue>({
     getExpandedRowModel: getExpandedRowModel(),
     onGlobalFilterChange: (updater) => {
       const newFilterValue = typeof updater === 'function' ? updater(globalFilter) : updater;
-      setGlobalFilter(newFilterValue || '');
-      
-      // Update URL search params with namespaced key
+      const value = newFilterValue || '';
+      setGlobalFilter(value);
+
       const paramKey = getParamKey('globalFilter');
-      if (newFilterValue) {
-        navigate({
-          search: { ...searchParams, [paramKey]: newFilterValue } as any,
-          replace: true,
-        });
+      const updatedParams = { ...searchParams };
+      if (value) {
+        updatedParams[paramKey] = value;
       } else {
-        const { [paramKey]: _, ...rest } = searchParams;
-        navigate({
-          search: rest as any,
-          replace: true,
-        });
+        delete updatedParams[paramKey];
       }
+      navigate({ search: updatedParams as any, replace: true });
+    },
+    onColumnFiltersChange: (updater) => {
+      const next = typeof updater === 'function' ? updater(columnFilters) : updater;
+
+      // Mark this update as local so the useEffect doesn't immediately revert it
+      lastLocalUpdateRef.current = JSON.stringify(next);
+      setColumnFilters(next);
+
+      // Sync to URL - create a clean copy and handle case-insensitivity
+      const updatedParams = { ...searchParams };
+
+      facetedFilterColumns?.forEach((filterCol) => {
+        const targetKey = getParamKey(filterCol.colName);
+
+        // Find and remove any existing keys that match case-insensitively to avoid duplicates
+        Object.keys(updatedParams).forEach(key => {
+          if (key.toLowerCase() === targetKey.toLowerCase()) {
+            delete updatedParams[key];
+          }
+        });
+
+        const filter = next.find((f) => f.id === filterCol.colName);
+        if (filter?.value) {
+          updatedParams[targetKey] = (filter.value as string[]).join(',');
+        }
+      });
+
+      navigate({ search: updatedParams as any, replace: true });
     },
   });
 
+  // Synchronize from URL when searchParams change (from back/forward or direct URL edits)
   useEffect(() => {
-    if (table) {
-      facetedFilterColumns?.forEach((filterColumn) => {
-        const paramKey = getParamKey(filterColumn.colName);
-        const colValue = searchParams?.[paramKey];
-        if (colValue) {
-          table
-            .getColumn(filterColumn.colName)
-            ?.setFilterValue(colValue.split(',') as string[]);
-        } else {
-          table.getColumn(filterColumn.colName)?.setFilterValue(undefined);
-        }
-      });
-      
-      const globalFilterValue = getFilterValue('globalFilter');
-      if (globalFilterValue && globalFilterValue !== globalFilter) {
-        setGlobalFilter(globalFilterValue);
-      } else if (!globalFilterValue && globalFilter) {
-        setGlobalFilter('');
+    const filtersFromUrl: ColumnFiltersState = [];
+    facetedFilterColumns?.forEach((filterColumn) => {
+      const targetKey = getParamKey(filterColumn.colName);
+      // Case-insensitive lookup from searchParams
+      const actualKey = Object.keys(searchParams || {}).find(
+        (key) => key.toLowerCase() === targetKey.toLowerCase()
+      );
+      const colValue = actualKey ? searchParams[actualKey] : undefined;
+
+      if (colValue && typeof colValue === 'string') {
+        filtersFromUrl.push({
+          id: filterColumn.colName,
+          value: colValue.split(','),
+        });
       }
+    });
+
+    // Only update if URL actually differs from current state AND it's not the update we just made
+    setColumnFilters((prev) => {
+      const currentFiltersJson = JSON.stringify(filtersFromUrl);
+      const prevJson = JSON.stringify(prev);
+
+      if (currentFiltersJson === prevJson) return prev;
+
+      // If the URL matches what we just manually set, we can clear the ref and skip the sync
+      if (lastLocalUpdateRef.current !== '' && currentFiltersJson === lastLocalUpdateRef.current) {
+        lastLocalUpdateRef.current = '';
+        return prev;
+      }
+
+      // If we have a pending local update that hasn't reflected in the URL yet,
+      // skip synchronization to avoid reverting to stale URL state.
+      if (lastLocalUpdateRef.current !== '') {
+        return prev;
+      }
+
+      return filtersFromUrl;
+    });
+
+    const globalFilterTargetKey = getParamKey('globalFilter');
+    const globalFilterActualKey = Object.keys(searchParams || {}).find(
+      (key) => key.toLowerCase() === globalFilterTargetKey.toLowerCase()
+    );
+    const globalFilterValue = (globalFilterActualKey ? searchParams[globalFilterActualKey] : '') || '';
+
+    if (globalFilterValue !== globalFilter && typeof globalFilterValue === 'string') {
+      setGlobalFilter(globalFilterValue);
     }
-  }, [searchParams, table, facetedFilterColumns, tableId]);
+  }, [searchParams, facetedFilterColumns, tableId]); // globalFilter removed from deps intentionally
 
   useEffect(() => {
     if (table) {
@@ -161,9 +301,9 @@ export function DataTable<TData, TValue>({
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </TableHead>
                   );
                 })}

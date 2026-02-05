@@ -3,7 +3,7 @@ import { type Table } from '@tanstack/react-table';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { type ReactElement } from 'react';
+import { type ReactElement, useEffect, useState } from 'react';
 import {
   DataTableFacetedFilter,
   type DataTableFacetedFilterOption,
@@ -16,6 +16,7 @@ export interface IDataTableFacetedFilterColumns {
   colName: string;
   options?: DataTableFacetedFilterOption[];
   icon: ReactElement;
+  singleSelect?: boolean;
 }
 
 export interface IDataTableToolBarProps {
@@ -39,13 +40,13 @@ export function DataTableToolbar<TData>({
   tableId,
 }: DataTableToolbarProps<TData>) {
   const navigate = useNavigate();
-  const searchParams = useSearch({ strict: false }) as any;
+  const searchParams = useSearch({ strict: false }) as Record<string, unknown>;
   const isFiltered = table.getState().columnFilters.length > 0 || globalFilter;
 
   const handleReset = () => {
     table.resetColumnFilters();
     table.resetGlobalFilter();
-    
+
     // Clear only this table's filter params if tableId is provided
     if (tableId) {
       const updatedParams = { ...searchParams };
@@ -55,26 +56,43 @@ export function DataTableToolbar<TData>({
           delete updatedParams[key];
         }
       });
-      navigate({ 
-        search: updatedParams as any, 
-        replace: true 
+      navigate({
+        search: updatedParams as any,
+        replace: true
       });
     } else {
       // Clear all filter-related search params
-      navigate({ 
-        search: {} as any, 
-        replace: true 
+      navigate({
+        search: {} as any,
+        replace: true
       });
     }
   };
+
+  /* Debounce logic for global filter */
+  const [searchValue, setSearchValue] = useState(globalFilter ?? '');
+
+  useEffect(() => {
+    setSearchValue(globalFilter ?? '');
+  }, [globalFilter]);
+
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (searchValue !== globalFilter) {
+        table.setGlobalFilter(searchValue);
+      }
+    }, 500);
+
+    return () => clearTimeout(timeout);
+  }, [searchValue, table, globalFilter]);
 
   return (
     <div className='flex items-center justify-between p-1'>
       <div className='flex flex-1 items-center space-x-2'>
         <Input
           placeholder={globalFilterPlaceHolder ?? 'Search...'}
-          value={globalFilter ?? ''}
-          onChange={(event) => table.setGlobalFilter(event.target.value)}
+          value={searchValue}
+          onChange={(event) => setSearchValue(event.target.value)}
           className='h-8 w-[150px] lg:w-[250px]'
         />
         {facetedFilterColumns?.map((filterCol, ix) => {
@@ -88,6 +106,7 @@ export function DataTableToolbar<TData>({
                 options={filterCol.options}
                 icon={filterCol.icon}
                 tableId={tableId}
+                singleSelect={filterCol.singleSelect}
               />
             )
           );

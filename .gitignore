@@ -31,3 +31,5 @@ docs/.drafts/
 *.draft.md
 *.temp.md
 *_DRAFT.md
+*storybook.log
+storybook-static

@@ -15,7 +15,7 @@ export type ThemeColor =
   | 'yellow'
   | 'violet';
 
-type ThemeProviderProps = {
+export type ThemeProviderProps = {
   children: React.ReactNode;
   defaultTheme?: Theme;
   defaultThemeColor?: ThemeColor;
