@@ -1,10 +1,10 @@
-import * as React from 'react';
+import * as React from "react";
 
 import {
   SidebarAppSwitcher,
   type IAppSwitcher,
-} from '@/components/shared/layout/sidenav/sidebar-app-switcher';
-import { SidebarNavItems } from '@/components/shared/layout/sidenav/sidebar-nav-items';
+} from "@/components/shared/layout/sidenav/sidebar-app-switcher";
+import { SidebarNavItems } from "@/components/shared/layout/sidenav/sidebar-nav-items";
 import {
   Sidebar,
   SidebarContent,
@@ -12,20 +12,16 @@ import {
   SidebarHeader,
   SidebarRail,
   useSidebar,
-} from '@/components/ui/sidebar';
-import { ModernProfile } from '@/components/shared/layout/common/profile/profile';
-import type { NavMenu } from '@/lib/models/types';
-import { useAppNav } from '@/lib/contexts/navigation-context';
-import { prefixHrefs } from '@/lib/helpers/functions';
-import { SearchMenu } from '../common/search-menu';
-import { Notifications } from '../common/notifications';
-import { useAtom } from 'jotai';
-import { appLayout } from '@/lib/contexts/atoms';
-import { LAYOUT_MODES } from '@/lib/constants';
+} from "@/components/ui/sidebar";
+import { ModernProfile } from "@/components/shared/layout/common/profile/profile";
+import type { NavMenu } from "@/lib/models/types";
+import { useAppNav } from "@/lib/contexts/navigation-context";
+import { prefixHrefs } from "@/lib/helpers/functions";
+import { SearchMenu } from "../common/search-menu";
+import { Notifications } from "../common/notifications";
 
 export interface AppSidebarProps
-  extends React.ComponentProps<typeof Sidebar>,
-    IAppSwitcher {
+  extends React.ComponentProps<typeof Sidebar>, IAppSwitcher {
   /**
    * Main navigation items
    */
@@ -79,7 +75,7 @@ export function AppSidebar({
   // showUser = true,
   ...props
 }: AppSidebarProps) {
-  const { open } = useSidebar();
+  const {} = useSidebar();
 
   const { navItems: contextNavItems, endNavItems: contextEndNavItems } =
     useAppNav();
@@ -94,19 +90,8 @@ export function AppSidebar({
       ? prefixHrefs(contextEndNavItems)
       : [];
 
-  const [layout, setLayout] = useAtom(appLayout);
-
-  React.useEffect(() => {
-    if (layout.startsWith('sidebar')) {
-      const newMode = open ? LAYOUT_MODES.SIDEBAR_OPEN : LAYOUT_MODES.SIDEBAR_COLLAPSED;
-      if (layout !== newMode) {
-        setLayout(newMode);
-      }
-    }
-  }, [open, layout, setLayout]);
-
   return (
-    <Sidebar collapsible='icon' {...props}>
+    <Sidebar collapsible="icon" {...props}>
       {apps && apps.length > 0 && (
         <SidebarHeader>
           <SidebarAppSwitcher apps={apps} appClicked={appClicked} />
@@ -116,8 +101,8 @@ export function AppSidebar({
         {navItems.length > 0 && <SidebarNavItems menuItems={navItems} />}
       </SidebarContent>
       <SidebarContent>
-        <div className='mt-auto'>
-          <div className='pb-0'>
+        <div className="mt-auto">
+          <div className="pb-0">
             {endNavItems.length > 0 && (
               <SidebarNavItems menuItems={endNavItems} />
             )}

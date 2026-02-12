@@ -47,6 +47,7 @@ export { cn } from "./lib/utils";
 
 export * from "./lib/helpers/functions";
 export * from "./lib/helpers/query";
+export * from "./lib/helpers/auth-redirect";
 
 // Export hooks
 export { useIsMobile } from "@/hooks/use-mobile";

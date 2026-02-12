@@ -111,7 +111,7 @@ function RouterBreadcrumb() {
         context?.breadcrumb || staticData?.breadcrumb || staticData?.title
 
       if (typeof breadcrumbDef === 'function') {
-        breadcrumbDef = breadcrumbDef(match.params)
+        breadcrumbDef = breadcrumbDef(match.params, match.loaderData)
       }
 
       if (Array.isArray(breadcrumbDef)) {
@@ -163,12 +163,17 @@ function RouterBreadcrumb() {
 
         {breadcrumbs.map((item, index) => {
           const isLast = index === breadcrumbs.length - 1
+          const isExternal = typeof item.to === 'string' && (item.to.startsWith('http') || item.to.startsWith('//'))
 
           return (
             <React.Fragment key={index}>
               <BreadcrumbItem>
                 {isLast || !item.to ? (
                   <BreadcrumbPage>{item.label}</BreadcrumbPage>
+                ) : isExternal ? (
+                  <BreadcrumbLink href={item.to}>
+                    {item.label}
+                  </BreadcrumbLink>
                 ) : (
                   <BreadcrumbLink asChild>
                     <Link to={item.to} params={item.params}>

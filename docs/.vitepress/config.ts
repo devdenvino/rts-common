@@ -5,7 +5,7 @@ export default defineConfig({
   title: "@devdenvino/rts-common",
   description: "Shared component library and utilities for micro-frontend applications",
   base: '/rts-common/',
-  
+
   head: [
     ['link', { rel: 'icon', type: 'image/svg+xml', href: '/logo.svg' }],
     ['meta', { name: 'theme-color', content: '#3b82f6' }],
@@ -17,12 +17,13 @@ export default defineConfig({
 
   themeConfig: {
     logo: '/logo.svg',
-    
+
     nav: [
       { text: 'Guide', link: '/guide/getting-started' },
       { text: 'Components', link: '/components/overview' },
+      { text: 'Storybook', link: '/storybook/' },
       { text: 'API', link: '/api/overview' },
-      { 
+      {
         text: 'Resources',
         items: [
           { text: 'Contributing', link: 'https://github.com/devdenvino/rts-common/blob/main/CONTRIBUTING.md' },

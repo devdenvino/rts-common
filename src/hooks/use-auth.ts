@@ -16,3 +16,5 @@ export type { AuthContextProps, AuthProviderProps } from 'react-oidc-context';
 
 // Re-export the AuthProvider component
 export { AuthProvider } from 'react-oidc-context';
+
+export { TanStackAuthStore } from '../lib/tanstack-auth-store';

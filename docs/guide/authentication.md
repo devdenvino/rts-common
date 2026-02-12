@@ -447,8 +447,17 @@ export function MockAuthProvider({ children, user = null }) {
 6. **Set Appropriate Scopes** based on your needs
 7. **Implement Proper Logout** including token revocation
 
+## Redirect Preservation
+
+**New in v0.1.4:** Query parameters and hash fragments are now automatically preserved during authentication!
+
+When users access a protected route with query parameters (e.g., `/dashboard?tab=analytics`), they will be redirected back to the exact same URL after authentication, with all query parameters intact.
+
+**Learn more:** [Authentication Redirect Preservation Guide](/guide/auth-redirect-preservation)
+
 ## Next Steps
 
+- [Authentication Redirect Preservation](/guide/auth-redirect-preservation) - Deep dive into URL preservation
 - [API Client Guide](/guide/api-client) - Using authenticated API calls
 - [Layouts](/guide/layouts) - User menus and navigation
 - [Best Practices](/guide/best-practices) - Security and performance tips
