@@ -13,7 +13,8 @@ import {
   getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
-} from '@tanstack/react-table';
+  type Row,
+} from "@tanstack/react-table";
 
 import {
   Table,
@@ -22,12 +23,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 
-import { useEffect, useState, useRef } from 'react';
-import { DataTablePagination } from './data-table-pagination';
-import { DataTableToolbar, type IDataTableToolBarProps } from './data-table-toolbar';
-import { useNavigate, useSearch } from '@tanstack/react-router';
+import { useEffect, useState, useRef } from "react";
+import { DataTablePagination } from "./data-table-pagination";
+import {
+  DataTableToolbar,
+  type IDataTableToolBarProps,
+} from "./data-table-toolbar";
+import { useNavigate, useSearch } from "@tanstack/react-router";
+import { cn } from "@/lib/utils";
+import { useVirtualizer } from "@tanstack/react-virtual";
 
 interface IDataTableProps<TData, TValue> extends IDataTableToolBarProps {
   /**
@@ -52,10 +58,6 @@ interface IDataTableProps<TData, TValue> extends IDataTableToolBarProps {
    */
   hidePagination?: boolean;
   /**
-   * Optional namespace for search params when multiple tables exist on the same page.
-   * This prefixes all filtering/sorting URL parameters with the ID.
-   */
-  /**
    * Optional control for server-side pagination.
    * If true, the table will not paginate automatically and will expect data to be pre-paginated.
    */
@@ -78,7 +80,47 @@ interface IDataTableProps<TData, TValue> extends IDataTableToolBarProps {
    * Total number of pages (alternative to rowCount for server-side pagination).
    */
   pageCount?: number;
+  /**
+   * Status of table density.
+   * @default 'normal'
+   */
+  density?: "normal" | "medium" | "compact";
+  /**
+   * Enable virtual scrolling for large datasets.
+   * Requires a defined height for the scroll container via `scrollAreaProps.className` or explicit `maxHeight`.
+   * @default false
+   */
+  enableVirtualization?: boolean;
+  /**
+   * Props to pass to the scroll container when virtualization is enabled.
+   * Use this to set the height of the scroll area.
+   */
+  scrollAreaProps?: React.HTMLAttributes<HTMLDivElement>;
 }
+
+const DENSITY_CONFIG = {
+  normal: {
+    rowHeight: 52,
+    cellPadding: "p-4",
+    headerHeight: "h-12",
+    headerPadding: "px-4",
+    fontSize: "text-sm",
+  },
+  medium: {
+    rowHeight: 40,
+    cellPadding: "p-2",
+    headerHeight: "h-9",
+    headerPadding: "px-3",
+    fontSize: "text-sm",
+  },
+  compact: {
+    rowHeight: 28,
+    cellPadding: "p-0 px-1",
+    headerHeight: "h-7",
+    headerPadding: "px-1",
+    fontSize: "text-xs",
+  },
+} as const;
 
 /**
  * A powerful, data-driven table component built on top of TanStack Table.
@@ -108,20 +150,24 @@ export function DataTable<TData, TValue>({
   manualFiltering,
   rowCount,
   pageCount,
+  density = "medium",
+  enableVirtualization = false,
+  scrollAreaProps,
 }: IDataTableProps<TData, TValue>) {
   const navigate = useNavigate();
   // We use strict: false to allow accessing arbitrary search params for filtering
   const searchParams = useSearch({ strict: false }) as Record<string, unknown>;
 
   // Helper functions to namespace search params when tableId is provided
-  const getParamKey = (key: string) => tableId ? `${tableId}_${key}` : key;
-  const getFilterFromUrl = (key: string) => searchParams?.[getParamKey(key)] as string | undefined;
+  const getParamKey = (key: string) => (tableId ? `${tableId}_${key}` : key);
+  const getFilterFromUrl = (key: string) =>
+    searchParams?.[getParamKey(key)] as string | undefined;
 
   const [rowSelection, setRowSelection] = useState({});
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
   // Track the last state we explicitly set from a user action to avoid race conditions with URL sync
-  const lastLocalUpdateRef = useRef<string>('');
+  const lastLocalUpdateRef = useRef<string>("");
 
   // Initialize column filters from URL with case-insensitivity
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>(() => {
@@ -129,21 +175,23 @@ export function DataTable<TData, TValue>({
     facetedFilterColumns?.forEach((filterColumn) => {
       const targetKey = getParamKey(filterColumn.colName);
       const actualKey = Object.keys(searchParams || {}).find(
-        (k) => k.toLowerCase() === targetKey.toLowerCase()
+        (k) => k.toLowerCase() === targetKey.toLowerCase(),
       );
       const colValue = actualKey ? searchParams[actualKey] : undefined;
 
-      if (colValue && typeof colValue === 'string') {
+      if (colValue && typeof colValue === "string") {
         initialFilters.push({
           id: filterColumn.colName,
-          value: colValue.split(','),
+          value: colValue.split(","),
         });
       }
     });
     return initialFilters;
   });
 
-  const [globalFilter, setGlobalFilter] = useState<string>(getFilterFromUrl('globalFilter') || '');
+  const [globalFilter, setGlobalFilter] = useState<string>(
+    getFilterFromUrl("globalFilter") || "",
+  );
   const [sorting, setSorting] = useState<SortingState>(sortingState || []);
   const [expanded, setExpanded] = useState<ExpandedState>({});
 
@@ -177,11 +225,12 @@ export function DataTable<TData, TValue>({
     getFacetedUniqueValues: getFacetedUniqueValues(),
     getExpandedRowModel: getExpandedRowModel(),
     onGlobalFilterChange: (updater) => {
-      const newFilterValue = typeof updater === 'function' ? updater(globalFilter) : updater;
-      const value = newFilterValue || '';
+      const newFilterValue =
+        typeof updater === "function" ? updater(globalFilter) : updater;
+      const value = newFilterValue || "";
       setGlobalFilter(value);
 
-      const paramKey = getParamKey('globalFilter');
+      const paramKey = getParamKey("globalFilter");
       const updatedParams = { ...searchParams };
       if (value) {
         updatedParams[paramKey] = value;
@@ -191,7 +240,8 @@ export function DataTable<TData, TValue>({
       navigate({ search: updatedParams as any, replace: true });
     },
     onColumnFiltersChange: (updater) => {
-      const next = typeof updater === 'function' ? updater(columnFilters) : updater;
+      const next =
+        typeof updater === "function" ? updater(columnFilters) : updater;
 
       // Mark this update as local so the useEffect doesn't immediately revert it
       lastLocalUpdateRef.current = JSON.stringify(next);
@@ -204,7 +254,7 @@ export function DataTable<TData, TValue>({
         const targetKey = getParamKey(filterCol.colName);
 
         // Find and remove any existing keys that match case-insensitively to avoid duplicates
-        Object.keys(updatedParams).forEach(key => {
+        Object.keys(updatedParams).forEach((key) => {
           if (key.toLowerCase() === targetKey.toLowerCase()) {
             delete updatedParams[key];
           }
@@ -212,7 +262,7 @@ export function DataTable<TData, TValue>({
 
         const filter = next.find((f) => f.id === filterCol.colName);
         if (filter?.value) {
-          updatedParams[targetKey] = (filter.value as string[]).join(',');
+          updatedParams[targetKey] = (filter.value as string[]).join(",");
         }
       });
 
@@ -227,14 +277,14 @@ export function DataTable<TData, TValue>({
       const targetKey = getParamKey(filterColumn.colName);
       // Case-insensitive lookup from searchParams
       const actualKey = Object.keys(searchParams || {}).find(
-        (key) => key.toLowerCase() === targetKey.toLowerCase()
+        (key) => key.toLowerCase() === targetKey.toLowerCase(),
       );
       const colValue = actualKey ? searchParams[actualKey] : undefined;
 
-      if (colValue && typeof colValue === 'string') {
+      if (colValue && typeof colValue === "string") {
         filtersFromUrl.push({
           id: filterColumn.colName,
-          value: colValue.split(','),
+          value: colValue.split(","),
         });
       }
     });
@@ -247,27 +297,34 @@ export function DataTable<TData, TValue>({
       if (currentFiltersJson === prevJson) return prev;
 
       // If the URL matches what we just manually set, we can clear the ref and skip the sync
-      if (lastLocalUpdateRef.current !== '' && currentFiltersJson === lastLocalUpdateRef.current) {
-        lastLocalUpdateRef.current = '';
+      if (
+        lastLocalUpdateRef.current !== "" &&
+        currentFiltersJson === lastLocalUpdateRef.current
+      ) {
+        lastLocalUpdateRef.current = "";
         return prev;
       }
 
       // If we have a pending local update that hasn't reflected in the URL yet,
       // skip synchronization to avoid reverting to stale URL state.
-      if (lastLocalUpdateRef.current !== '') {
+      if (lastLocalUpdateRef.current !== "") {
         return prev;
       }
 
       return filtersFromUrl;
     });
 
-    const globalFilterTargetKey = getParamKey('globalFilter');
+    const globalFilterTargetKey = getParamKey("globalFilter");
     const globalFilterActualKey = Object.keys(searchParams || {}).find(
-      (key) => key.toLowerCase() === globalFilterTargetKey.toLowerCase()
+      (key) => key.toLowerCase() === globalFilterTargetKey.toLowerCase(),
     );
-    const globalFilterValue = (globalFilterActualKey ? searchParams[globalFilterActualKey] : '') || '';
+    const globalFilterValue =
+      (globalFilterActualKey ? searchParams[globalFilterActualKey] : "") || "";
 
-    if (globalFilterValue !== globalFilter && typeof globalFilterValue === 'string') {
+    if (
+      globalFilterValue !== globalFilter &&
+      typeof globalFilterValue === "string"
+    ) {
       setGlobalFilter(globalFilterValue);
     }
   }, [searchParams, facetedFilterColumns, tableId]); // globalFilter removed from deps intentionally
@@ -275,13 +332,46 @@ export function DataTable<TData, TValue>({
   useEffect(() => {
     if (table) {
       defaultHiddenColumns?.forEach((col) =>
-        table.getColumn(col)?.toggleVisibility(false)
+        table.getColumn(col)?.toggleVisibility(false),
       );
     }
   }, [table, defaultHiddenColumns]);
 
+  // Virtualization
+  const parentRef = useRef<HTMLDivElement>(null);
+  const { rows } = enableVirtualization
+    ? table.getPrePaginationRowModel()
+    : table.getRowModel();
+
+  const currentDensity = DENSITY_CONFIG[density];
+
+  const virtualizer = useVirtualizer({
+    count: rows.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => currentDensity.rowHeight,
+    overscan: 10,
+    enabled: enableVirtualization,
+  });
+
+  const defaultVirtualStyle: React.CSSProperties = enableVirtualization
+    ? { height: "800px", overflow: "auto", position: "relative" }
+    : {};
+
+  const finalStyle: React.CSSProperties = {
+    ...defaultVirtualStyle,
+    ...scrollAreaProps?.style,
+  };
+
+  if (
+    enableVirtualization &&
+    !finalStyle.height &&
+    !scrollAreaProps?.className?.includes("h-")
+  ) {
+    finalStyle.height = "800px";
+  }
+
   return (
-    <div className='space-y-4'>
+    <div className="space-y-4">
       <DataTableToolbar
         table={table}
         globalFilter={globalFilter}
@@ -290,59 +380,169 @@ export function DataTable<TData, TValue>({
         globalActions={globalActions}
         tableId={tableId}
       />
-      <div className='rounded-md border'>
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
-                    <TableHead key={header.id} colSpan={header.colSpan}>
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext()
+      <div
+        ref={parentRef}
+        className={cn(
+          "rounded-md border",
+          enableVirtualization ? "overflow-auto" : "overflow-hidden",
+          scrollAreaProps?.className,
+        )}
+        {...scrollAreaProps}
+        style={finalStyle}
+      >
+        {enableVirtualization ? (
+          <table className="w-full caption-bottom text-sm">
+            <TableHeader className="sticky top-0 z-10 bg-background">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead
+                        key={header.id}
+                        colSpan={header.colSpan}
+                        className={cn(
+                          currentDensity.headerHeight,
+                          currentDensity.headerPadding,
+                          currentDensity.fontSize,
                         )}
-                    </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => {
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                      </TableHead>
+                    );
+                  })}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {virtualizer.getVirtualItems().length > 0 && (
+                <tr
+                  style={{
+                    height: `${virtualizer.getVirtualItems()[0].start}px`,
+                  }}
+                >
+                  <td colSpan={columns.length} />
+                </tr>
+              )}
+              {virtualizer.getVirtualItems().map((virtualRow) => {
+                const row = rows[virtualRow.index];
                 return (
                   <TableRow
                     key={row.id}
-                    data-state={row.getIsSelected() && 'selected'}
+                    data-state={row.getIsSelected() && "selected"}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
+                      <TableCell
+                        key={cell.id}
+                        className={cn(
+                          currentDensity.cellPadding,
+                          currentDensity.fontSize,
+                        )}
+                      >
                         {flexRender(
                           cell.column.columnDef.cell,
-                          cell.getContext()
+                          cell.getContext(),
                         )}
                       </TableCell>
                     ))}
                   </TableRow>
                 );
-              })
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className='h-24 text-center'
+              })}
+              {virtualizer.getVirtualItems().length > 0 && (
+                <tr
+                  style={{
+                    height: `${
+                      virtualizer.getTotalSize() -
+                      virtualizer.getVirtualItems()[
+                        virtualizer.getVirtualItems().length - 1
+                      ].end
+                    }px`,
+                  }}
                 >
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+                  <td colSpan={columns.length} />
+                </tr>
+              )}
+            </TableBody>
+          </table>
+        ) : (
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => {
+                    return (
+                      <TableHead
+                        key={header.id}
+                        colSpan={header.colSpan}
+                        className={cn(
+                          currentDensity.headerHeight,
+                          currentDensity.headerPadding,
+                          currentDensity.fontSize,
+                        )}
+                      >
+                        {header.isPlaceholder
+                          ? null
+                          : flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
+                      </TableHead>
+                    );
+                  })}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows?.length ? (
+                table.getRowModel().rows.map((row) => {
+                  return (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && "selected"}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell
+                          key={cell.id}
+                          className={cn(
+                            currentDensity.cellPadding,
+                            currentDensity.fontSize,
+                          )}
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  );
+                })
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        )}
       </div>
-      {!hidePagination && <DataTablePagination table={table} />}
+      {!hidePagination && !enableVirtualization && (
+        <DataTablePagination table={table} />
+      )}
+      {enableVirtualization && (
+        <div className="text-muted-foreground text-xs p-2">
+          Showing {rows.length} rows (Virtualized)
+        </div>
+      )}
     </div>
   );
 }
