@@ -2,7 +2,8 @@ import { Cross2Icon } from '@radix-ui/react-icons';
 import { type Table } from '@tanstack/react-table';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { InputGroup, InputGroupAddon, InputGroupInput } from '@/components/ui/input-group';
+import { Search } from 'lucide-react';
 import { type ReactElement, useEffect, useState } from 'react';
 import {
   DataTableFacetedFilter,
@@ -89,12 +90,16 @@ export function DataTableToolbar<TData>({
   return (
     <div className='flex items-center justify-between p-1'>
       <div className='flex flex-1 items-center space-x-2'>
-        <Input
-          placeholder={globalFilterPlaceHolder ?? 'Search...'}
-          value={searchValue}
-          onChange={(event) => setSearchValue(event.target.value)}
-          className='h-8 w-[150px] lg:w-[250px]'
-        />
+        <InputGroup className='h-8 w-[150px] lg:w-[250px]'>
+          <InputGroupAddon>
+            <Search />
+          </InputGroupAddon>
+          <InputGroupInput
+            placeholder={globalFilterPlaceHolder ?? 'Search...'}
+            value={searchValue}
+            onChange={(event) => setSearchValue(event.target.value)}
+          />
+        </InputGroup>
         {facetedFilterColumns?.map((filterCol, ix) => {
           return (
             table.getColumn(filterCol.colName) &&

@@ -16,44 +16,11 @@ export function Loading({
   fullScreen = true 
 }: LoadingProps) {
   const containerClasses = fullScreen
-    ? "fixed inset-0 z-[100] flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/20"
+    ? "fixed inset-0 z-[100] flex items-center justify-center bg-background/50 backdrop-blur-sm"
     : "flex items-center justify-center min-h-[400px]";
 
   return (
     <div className={containerClasses}>
-      {/* Animated background gradient orbs */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(3)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute rounded-full mix-blend-multiply filter blur-xl opacity-20"
-            style={{
-              background: `radial-gradient(circle, ${
-                i === 0
-                  ? "hsl(var(--primary))"
-                  : i === 1
-                    ? "hsl(var(--secondary))"
-                    : "hsl(var(--accent))"
-              }, transparent)`,
-              width: `${300 + i * 100}px`,
-              height: `${300 + i * 100}px`,
-              left: `${20 + i * 30}%`,
-              top: `${10 + i * 20}%`,
-            }}
-            animate={{
-              x: [0, 100, 0],
-              y: [0, 50, 0],
-              scale: [1, 1.1, 1],
-            }}
-            transition={{
-              duration: 8 + i * 2,
-              repeat: Number.POSITIVE_INFINITY,
-              ease: "easeInOut",
-            }}
-          />
-        ))}
-      </div>
-
       {/* Loading card */}
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 20 }}

@@ -26,7 +26,7 @@ export default function TopNavLayout({
         )}
       </div>
       <div className='flex-1 overflow-y-auto md:mr-2 md:ml-2'>
-        <div className='flex flex-col gap-4 p-4'>{children}</div>
+        <div className='flex flex-col gap-4'>{children}</div>
       </div>
       <div className='sticky bottom-0 z-50 bg-white dark:bg-black'>
         <Footer />

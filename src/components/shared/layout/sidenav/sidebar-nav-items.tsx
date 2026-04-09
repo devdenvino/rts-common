@@ -84,7 +84,7 @@ function NavMenuItem({ item }: { item: NavMenu }) {
                 >
                   <DropdownMenuTrigger asChild>
                     <div className="flex h-8 w-8 items-center justify-center">
-                      {item.icon && <item.icon />}
+                      {item.icon && <item.icon className="size-4" />}
                     </div>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
@@ -96,7 +96,7 @@ function NavMenuItem({ item }: { item: NavMenu }) {
                     {item.pageLinks?.map((navItem, ix) => (
                       <DropdownMenuItem key={ix} asChild>
                         <Link to={navItem.href} key={ix}>
-                          {navItem.icon && <navItem.icon />}
+                          {navItem.icon && <navItem.icon className="size-4" />}
                           <span>{navItem.title}</span>
                         </Link>
                       </DropdownMenuItem>
@@ -104,10 +104,10 @@ function NavMenuItem({ item }: { item: NavMenu }) {
                   </DropdownMenuContent>
                 </DropdownMenu>
               ) : (
-                item.icon && <item.icon />
+                item.icon && <item.icon className="size-4" />
               )}
               <span>{item.title}</span>
-              <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+              <ChevronRight className="ml-auto size-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
             </SidebarMenuButton>
           </CollapsibleTrigger>
           <CollapsibleContent>
@@ -116,7 +116,7 @@ function NavMenuItem({ item }: { item: NavMenu }) {
                 <SidebarMenuSubItem key={navItem.title}>
                   <SidebarMenuSubButton asChild>
                     <Link to={navItem.href}>
-                      {navItem.icon && <navItem.icon />}
+                      {navItem.icon && <navItem.icon className="size-4" />}
                       <span>{navItem.title}</span>
                     </Link>
                   </SidebarMenuSubButton>
@@ -132,7 +132,7 @@ function NavMenuItem({ item }: { item: NavMenu }) {
   return (
     <SidebarMenuButton asChild tooltip={item.title} key={item.title}>
       <Link to={item.href}>
-        {item.icon && <item.icon />}
+        {item.icon && <item.icon className="size-4" />}
         <span>{item.title}</span>
       </Link>
     </SidebarMenuButton>

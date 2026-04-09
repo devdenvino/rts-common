@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.6] - 2026-04-09
+
+### Added
+
+- **Config**: Added `.prettierrc.yaml` with `singleQuote: true` for consistent code formatting.
+- **DataTable**: Added new `dense` density option for tighter row layout; renamed previous `compact` settings to use `compact` with relaxed padding.
+- **DataTableToolbar**: Replaced plain `Input` search field with `InputGroup` + `InputGroupAddon` + search icon for improved visual styling.
+
+### Changed
+
+- **SidebarLayout**: Removed default `p-4` padding from the content area, giving consumers full layout control.
+- **TopNavLayout**: Removed default `p-4` padding from the content wrapper for consistent layout behaviour.
+- **SidebarNavItems**: Standardised all nav icons to `size-4` class; added `size-4` to the `ChevronRight` collapse indicator.
+- **Notifications**: Normalised JSX attribute quotes to double-quotes (Prettier); standardised Bell/BellDot icons to `size-4`.
+- **Loading**: Simplified full-screen loading background — removed animated gradient orbs, replaced with a lightweight `bg-background/50 backdrop-blur-sm` overlay.
+
 ## [0.1.5] - 2026-02-15
 
 ### Added

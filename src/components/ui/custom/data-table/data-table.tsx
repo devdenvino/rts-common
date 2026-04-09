@@ -84,7 +84,7 @@ interface IDataTableProps<TData, TValue> extends IDataTableToolBarProps {
    * Status of table density.
    * @default 'normal'
    */
-  density?: "normal" | "medium" | "compact";
+  density?: "normal" | "medium" | "compact" | "dense";
   /**
    * Enable virtual scrolling for large datasets.
    * Requires a defined height for the scroll container via `scrollAreaProps.className` or explicit `maxHeight`.
@@ -114,6 +114,13 @@ const DENSITY_CONFIG = {
     fontSize: "text-sm",
   },
   compact: {
+    rowHeight: 32,
+    cellPadding: "px-3 py-1.5",
+    headerHeight: "h-9",
+    headerPadding: "px-3",
+    fontSize: "text-sm",
+  },
+  dense: {
     rowHeight: 28,
     cellPadding: "p-0 px-1",
     headerHeight: "h-7",

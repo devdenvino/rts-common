@@ -29,7 +29,7 @@ function NotificationInbox({ setOpen }: { setOpen: (open: boolean) => void }) {
   return (
     <>
       {layout.startsWith('sidebar') ? (
-        <SidebarGroup className='pt-1 pb-1'>
+        <SidebarGroup className="pt-1 pb-1">
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
@@ -39,14 +39,18 @@ function NotificationInbox({ setOpen }: { setOpen: (open: boolean) => void }) {
                       unreadCount > 0 ? `${unreadCountMessage} ` : ''
                     }Notifications`}
                     onClick={() => setOpen(true)}
-                    className='cursor-pointer'
+                    className="cursor-pointer"
                   >
-                    {unreadCount > 0 ? <BellDot /> : <Bell />}
+                    {unreadCount > 0 ? (
+                      <BellDot className="size-4" />
+                    ) : (
+                      <Bell className="size-4" />
+                    )}
                     <span>Notifications</span>
                     {unreadCount > 0 && (
                       <Badge
-                        className='ml-auto h-5 min-w-5 rounded-full px-1 font-mono tabular-nums'
-                        variant='destructive'
+                        className="ml-auto h-5 min-w-5 rounded-full px-1 font-mono tabular-nums"
+                        variant="destructive"
                       >
                         {unreadCountMessage}
                       </Badge>
@@ -59,16 +63,16 @@ function NotificationInbox({ setOpen }: { setOpen: (open: boolean) => void }) {
         </SidebarGroup>
       ) : (
         <Button
-          variant='ghost'
-          size='icon'
+          variant="ghost"
+          size="icon"
           onClick={() => setOpen(true)}
-          className='relative cursor-pointer'
+          className="relative cursor-pointer"
         >
-          <BellIcon className='h-4 w-4' />
+          <BellIcon className="h-4 w-4" />
           {unreadCount > 0 && (
             <Badge
-              variant='destructive'
-              className='absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center rounded-full text-xs'
+              variant="destructive"
+              className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center rounded-full text-xs"
             >
               {unreadCountMessage}
             </Badge>

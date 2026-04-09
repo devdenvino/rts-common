@@ -54,7 +54,7 @@ export default function SidebarLayout({
             {showBreadcrumbs && <RouterBreadcrumb />}
           </div>
         </header>
-        <div className={`flex-1 h-0 overflow-y-auto p-4 ${className || ""}`}>
+        <div className={`flex-1 h-0 overflow-y-auto ${className || ""}`}>
           <div className="flex flex-col gap-4 w-full">{children}</div>
         </div>
       </SidebarInset>
