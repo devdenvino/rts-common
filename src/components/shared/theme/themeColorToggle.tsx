@@ -21,8 +21,11 @@ export function ThemeColorToggle() {
           <span className="sr-only">Toggle theme</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        <div className="space-y-1.5">
+      <DropdownMenuContent
+        align="end"
+        style={{ width: "100%", minWidth: "240px" }}
+      >
+        <div className="w-full space-y-1.5">
           <Label className="text-xs">Select Theme</Label>
           <div className="grid grid-cols-3 gap-2">
             {(

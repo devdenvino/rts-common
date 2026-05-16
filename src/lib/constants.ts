@@ -1,7 +1,7 @@
 export const STORAGE_KEYS = {
   LAYOUT: 'layout',
-  THEME: 'vite-ui-theme',
-  THEME_COLOR: 'vite-ui-theme-color',
+  THEME: 'theme',
+  THEME_COLOR: 'theme-color',
 } as const;
 
 export const LAYOUT_MODES = {

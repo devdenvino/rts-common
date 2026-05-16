@@ -1,6 +1,8 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { STORAGE_KEYS } from '@/lib/constants';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 type Theme = 'dark' | 'light' | 'system';
+type ResolvedTheme = 'dark' | 'light';
 export type ThemeColor =
   | 'blue'
   | 'green'
@@ -19,8 +21,9 @@ export type ThemeProviderProps = {
   children: React.ReactNode;
   defaultTheme?: Theme;
   defaultThemeColor?: ThemeColor;
-  themeStorageKey?: string;
+  storageKey?: string;
   themeColorStorageKey?: string;
+  disableTransitionOnChange?: boolean;
 };
 
 type ThemeProviderState = {
@@ -30,6 +33,9 @@ type ThemeProviderState = {
   setTheme: (theme: Theme) => void;
   setThemeColor: (color: ThemeColor) => void;
 };
+
+const COLOR_SCHEME_QUERY = '(prefers-color-scheme: dark)';
+const THEME_VALUES: Theme[] = ['dark', 'light', 'system'];
 
 const initialState: ThemeProviderState = {
   theme: 'light',
@@ -41,24 +47,228 @@ const initialState: ThemeProviderState = {
 
 const ThemeProviderContext = createContext<ThemeProviderState>(initialState);
 
+function isTheme(value: string | null): value is Theme {
+  if (value === null) {
+    return false;
+  }
+
+  return THEME_VALUES.includes(value as Theme);
+}
+
+function getSystemTheme(): ResolvedTheme {
+  if (window.matchMedia(COLOR_SCHEME_QUERY).matches) {
+    return 'dark';
+  }
+
+  return 'light';
+}
+
+function disableTransitionsTemporarily() {
+  const style = document.createElement('style');
+  style.appendChild(
+    document.createTextNode(
+      '*,*::before,*::after{-webkit-transition:none!important;transition:none!important}',
+    ),
+  );
+  document.head.appendChild(style);
+
+  return () => {
+    window.getComputedStyle(document.body);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        style.remove();
+      });
+    });
+  };
+}
+
+function isEditableTarget(target: EventTarget | null) {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+
+  if (target.isContentEditable) {
+    return true;
+  }
+
+  const editableParent = target.closest(
+    "input, textarea, select, [contenteditable='true']",
+  );
+  if (editableParent) {
+    return true;
+  }
+
+  return false;
+}
+
 export function ThemeProvider({
   children,
   defaultTheme = 'light',
   defaultThemeColor = 'violet',
-  themeStorageKey: themeStorageKey = 'vite-ui-theme',
-  themeColorStorageKey: themeColorStorageKey = 'vite-ui-theme-color',
+  storageKey = STORAGE_KEYS.THEME,
+  themeColorStorageKey: themeColorStorageKey = STORAGE_KEYS.THEME_COLOR,
+  disableTransitionOnChange = true,
   ...props
 }: ThemeProviderProps) {
   const [themeName, setThemeName] = useState<string>(defaultTheme);
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem(themeStorageKey) as Theme) || defaultTheme
+  const [themeColor, setThemeColorState] = useState<ThemeColor>(
+    () => {
+      const stored = localStorage.getItem(themeColorStorageKey) as ThemeColor;
+      return stored || defaultThemeColor;
+    }
   );
 
-  const [themeColor, setThemeColor] = useState<ThemeColor>(
-    () =>
-      (localStorage.getItem(themeColorStorageKey) as ThemeColor) ||
-      defaultThemeColor
+  const [theme, setThemeState] = useState<Theme>(() => {
+    const storedTheme = localStorage.getItem(storageKey);
+    if (isTheme(storedTheme)) {
+      return storedTheme;
+    }
+
+    return defaultTheme;
+  });
+  const setTheme = useCallback(
+    (nextTheme: Theme) => {
+      localStorage.setItem(storageKey, nextTheme);
+      setThemeState(nextTheme);
+    },
+    [storageKey],
   );
+
+  const setThemeColor = useCallback(
+    (nextColor: ThemeColor) => {
+      localStorage.setItem(themeColorStorageKey, nextColor);
+      setThemeColorState(nextColor);
+    },
+    [themeColorStorageKey],
+  );
+
+  const applyTheme = useCallback(
+    (nextTheme: Theme) => {
+      const root = document.documentElement;
+      const resolvedTheme =
+        nextTheme === 'system' ? getSystemTheme() : nextTheme;
+      const restoreTransitions = disableTransitionOnChange
+        ? disableTransitionsTemporarily()
+        : null;
+
+      root.classList.remove('light', 'dark');
+      root.classList.add(resolvedTheme);
+
+      if (restoreTransitions) {
+        restoreTransitions();
+      }
+    },
+    [disableTransitionOnChange],
+  );
+
+  useEffect(() => {
+    applyTheme(theme);
+
+    if (theme !== 'system') {
+      return undefined;
+    }
+
+    const mediaQuery = window.matchMedia(COLOR_SCHEME_QUERY);
+    const handleChange = () => {
+      applyTheme('system');
+    };
+
+    mediaQuery.addEventListener('change', handleChange);
+
+    return () => {
+      mediaQuery.removeEventListener('change', handleChange);
+    };
+  }, [theme, applyTheme]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.repeat) {
+        return;
+      }
+
+      if (event.metaKey || event.ctrlKey || event.altKey) {
+        return;
+      }
+
+      if (isEditableTarget(event.target)) {
+        return;
+      }
+
+      if (event.key.toLowerCase() !== 'd') {
+        return;
+      }
+
+      setThemeState((currentTheme) => {
+        const nextTheme =
+          currentTheme === 'dark'
+            ? 'light'
+            : currentTheme === 'light'
+              ? 'dark'
+              : getSystemTheme() === 'dark'
+                ? 'light'
+                : 'dark';
+
+        localStorage.setItem(storageKey, nextTheme);
+        return nextTheme;
+      });
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [storageKey]);
+
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.storageArea !== localStorage) {
+        return;
+      }
+
+      if (event.key !== storageKey) {
+        return;
+      }
+
+      if (isTheme(event.newValue)) {
+        setThemeState(event.newValue);
+        return;
+      }
+
+      setThemeState(defaultTheme);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [defaultTheme, storageKey]);
+
+  useEffect(() => {
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.storageArea !== localStorage) {
+        return;
+      }
+
+      if (event.key !== themeColorStorageKey) {
+        return;
+      }
+
+      if (event.newValue) {
+        setThemeColorState(event.newValue as ThemeColor);
+        return;
+      }
+
+      setThemeColorState(defaultThemeColor);
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, [defaultThemeColor, themeColorStorageKey]);
 
   useEffect(() => {
     const body = window.document.body;
@@ -90,19 +300,16 @@ export function ThemeProvider({
     setThemeName(theme);
   }, [theme]);
 
-  const value = {
-    theme,
-    themeName,
-    themeColor,
-    setTheme: (theme: Theme) => {
-      localStorage.setItem(themeStorageKey, theme);
-      setTheme(theme);
-    },
-    setThemeColor: (themeColor: ThemeColor) => {
-      localStorage.setItem(themeColorStorageKey, themeColor);
-      setThemeColor(themeColor);
-    },
-  };
+  const value = useMemo(
+    () => ({
+      theme,
+      themeName,
+      themeColor,
+      setTheme,
+      setThemeColor,
+    }),
+    [theme, themeName, themeColor, setTheme, setThemeColor],
+  );
 
   return (
     <ThemeProviderContext.Provider {...props} value={value}>
@@ -124,7 +331,7 @@ export const useThemeColor = () => {
   const context = useContext(ThemeProviderContext);
 
   if (context === undefined)
-    throw new Error('useTheme must be used within a ThemeProvider');
+    throw new Error('useThemeColor must be used within a ThemeProvider');
 
   return context;
 };

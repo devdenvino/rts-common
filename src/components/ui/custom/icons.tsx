@@ -39,7 +39,6 @@ import {
   Shuffle,
   SunMedium,
   Trash,
-  Twitter,
   UploadIcon,
   User,
   Waypoints,
@@ -101,7 +100,7 @@ export const Icons = {
       ></path>
     </svg>
   ),
-  twitter: Twitter,
+  twitter: X,
   check: Check,
   flagTriangleLeftIcon: FlagTriangleLeftIcon,
   flagTriangleRight: FlagTriangleRight,
