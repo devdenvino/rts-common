@@ -24,8 +24,21 @@ High-level components for application structure:
 - **AppBase**: Main application wrapper with auth and theme
 - **Sidebar**: Collapsible sidebar navigation
 - **TopNav**: Top navigation bar with branding and user menu
+- **ColorSchemePicker**: Popover swatch picker for 18 runtime color schemes
 
 [Learn about Layouts →](/guide/layouts)
+
+### Messaging Components
+
+Purpose-built components for chat and messaging interfaces:
+
+- **Attachment**: File attachment cards with upload states and action buttons
+- **Bubble**: Chat message bubbles with 7 visual variants and alignment
+- **Marker**: Date separators, timestamps, and status labels
+- **Message**: Structural layout — avatar, header, content, footer
+- **MessageScroller**: Auto-scrolling viewport with a floating scroll-to-end button
+
+[Browse Messaging Components →](/components/ui/all#messaging)
 
 ### Magic UI
 

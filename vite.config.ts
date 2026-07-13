@@ -39,9 +39,9 @@ export default defineConfig({
         'components/ui/index': resolve(__dirname, 'src/components/ui/index.ts'),
         'components/ui/custom/index': resolve(__dirname, 'src/components/ui/custom/index.ts'),
         'components/magicui/index': resolve(__dirname, 'src/components/magicui/index.ts'),
-        'lucide-react': resolve(__dirname, 'src/lucide-react.ts'),
-        'tabler-icons-react': resolve(__dirname, 'src/tabler-icons-react.ts'),
-        'tanstack-react-table': resolve(__dirname, 'src/tanstack-react-table.ts')
+        'lucide-react': resolve(__dirname, 'src/lib/vendor/lucide-react.ts'),
+        'tabler-icons-react': resolve(__dirname, 'src/lib/vendor/tabler-icons-react.ts'),
+        'tanstack-react-table': resolve(__dirname, 'src/lib/vendor/tanstack-react-table.ts')
       },
       formats: ['es'],
       fileName: (_format, entryName) => {

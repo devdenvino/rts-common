@@ -41,7 +41,7 @@ TopNavBarProps) {
 
   return (
     <div className="flex flex-col">
-      <header className="flex flex-row sticky h-14 top-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-2 space-x-2">
+      <header className="flex flex-row items-center sticky h-14 top-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-2 space-x-2">
         <div className="mr-4 hidden md:flex">
           <TitleSwitcher apps={apps} />
           <NavLinks menuItems={navItems} />
@@ -68,7 +68,7 @@ TopNavBarProps) {
 export function AnonymousHeader({ apps }: TopNavBarProps) {
   return (
     <div className="flex flex-col">
-      <header className="flex flex-row sticky h-14 top-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-2 space-x-2">
+      <header className="flex flex-row items-center sticky h-14 top-0 z-30 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-2 space-x-2">
         <div className="mr-4 hidden md:flex">
           <div className="mr-6 flex items-center space-x-2">
             <span className="hidden font-bold text-lg sm:inline-block">

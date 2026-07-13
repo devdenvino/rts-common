@@ -14,6 +14,10 @@ Complete API documentation for rts-common hooks, utilities, and types.
 - **[useIsMobile](/api/hooks/use-mobile)** - Detect mobile devices
 - **[useControlledState](/api/hooks/use-controlled-state)** - Manage controlled component state
 
+## Store
+
+- **[App Store](/api/store)** - Global theme, color scheme, and layout state (`useAppStore`, `setTheme`, `setColorScheme`, `setLayoutMode`)
+
 ## Utilities
 
 ### Styling

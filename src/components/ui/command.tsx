@@ -1,3 +1,5 @@
+"use client"
+
 import * as React from "react"
 import { Command as CommandPrimitive } from "cmdk"
 
@@ -57,9 +59,7 @@ function CommandDialog({
         )}
         showCloseButton={showCloseButton}
       >
-        <Command className="rounded-none border-0 shadow-none">
-          {children}
-        </Command>
+        <Command>{children}</Command>
       </DialogContent>
     </Dialog>
   )

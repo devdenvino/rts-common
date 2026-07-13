@@ -123,6 +123,28 @@ Loading spinner.
 ### Skeleton
 Loading skeleton placeholder.
 
+## Messaging
+
+### Attachment
+File attachment card with icon/image media, progress states (`idle`, `uploading`, `processing`, `error`, `done`), and action buttons.
+[View Attachment Docs](/components/ui/attachment)
+
+### Bubble
+Chat bubble with 7 visual variants (`default`, `secondary`, `muted`, `tinted`, `outline`, `ghost`, `destructive`) and start/end alignment. Includes `BubbleGroup`, `BubbleContent`, and `BubbleReactions`.
+[View Bubble Docs](/components/ui/bubble)
+
+### Marker
+Inline metadata label for timestamps, date separators, and status text. Variants: `default`, `separator`, `border`.
+[View Marker Docs](/components/ui/marker)
+
+### Message
+Structural layout for chat messages — avatar, content, header, footer. Supports start/end alignment. Includes `MessageGroup`, `MessageAvatar`, `MessageContent`, `MessageHeader`, `MessageFooter`.
+[View Message Docs](/components/ui/message)
+
+### MessageScroller
+Auto-scrolling chat viewport with a floating scroll-to-end button. Powered by `@shadcn/react/message-scroller`. Exposes `useMessageScroller`, `useMessageScrollerScrollable`, and `useMessageScrollerVisibility` hooks.
+[View MessageScroller Docs](/components/ui/message-scroller)
+
 ## Data Display
 
 ### Table

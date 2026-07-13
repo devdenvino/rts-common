@@ -9,6 +9,17 @@ export {
   type AppBaseProps,
 } from "@/components/shared/app/app-base";
 export * from "@/components/shared/theme";
+// Export app store — theme, color scheme, and layout state management
+export {
+  appStore,
+  useAppStore,
+  setTheme,
+  setColorScheme,
+  setLayoutMode,
+  LAYOUT_MODES,
+  type AppState,
+  type LayoutMode,
+} from "@/store/app-store";
 export * from "@/components/shared/dialog";
 
 // Export error boundary and loading components
@@ -59,8 +70,11 @@ export {
   useAutoSignin,
   hasAuthParams,
   AuthProvider,
+  withAuth,
   type AuthContextProps,
   type AuthProviderProps,
+  type User,
+  type UserProfile,
 } from '@/hooks/use-auth';
 
 // Export navigation context

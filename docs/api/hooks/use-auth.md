@@ -328,23 +328,36 @@ function LogoutButton() {
 ## TypeScript
 
 ```typescript
-import type { User } from 'oidc-client-ts';
+import type { User, UserProfile } from '@devdenvino/rts-common';
 
-// User type is exported from oidc-client-ts
+// User — from oidc-client-ts
 const user: User | null = useAuth().user;
 
-// Profile type
-interface UserProfile {
-  sub: string;
-  name?: string;
-  email?: string;
-  email_verified?: boolean;
-  picture?: string;
-  preferred_username?: string;
-  roles?: string[];
-  [key: string]: any;
-}
+// User profile
+const profile: UserProfile = user.profile;
+// profile.sub, profile.name, profile.email, profile.picture, etc.
 ```
+
+Both `User` and `UserProfile` are re-exported from `oidc-client-ts` for convenience:
+
+```typescript
+import type { User, UserProfile } from '@devdenvino/rts-common';
+```
+
+## withAuth
+
+Higher-order component that wraps a component and only renders it when the user is authenticated. Provided by `react-oidc-context`.
+
+```typescript
+import { withAuth } from '@devdenvino/rts-common';
+
+const ProtectedPage = withAuth(function Page() {
+  const { user } = useAuth();
+  return <h1>Hello, {user?.profile.name}!</h1>;
+});
+```
+
+> Under the hood, `withAuth` calls `useAuth` and redirects to the OIDC provider if the user is not authenticated.
 
 ## See Also
 

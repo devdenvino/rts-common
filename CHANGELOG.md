@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.8] - 2026-07-13
+
+### Added
+
+- **Attachment**: New `Attachment`, `AttachmentMedia`, `AttachmentContent`, and `AttachmentAction` components for displaying file/media attachments with `idle`, `uploading`, `processing`, `error`, and `done` states; supports `default`, `sm`, and `xs` sizes with `horizontal`/`vertical` orientations.
+- **Bubble**: New `Bubble` component for chat-style message bubbles with sender/receiver variants.
+- **Marker**: New `Marker` component for inline status or label indicators.
+- **Message / MessageScroller**: New `Message` and `MessageScroller` components for structured chat message layouts with auto-scroll behaviour.
+- **Empty**: New `Empty` component for empty-state placeholder UI.
+- **Field**: New `Field` component for consistent form field layout with label, control, and helper-text slots.
+- **Spinner**: New `Spinner` component for loading indicators.
+- **ColorSchemePicker**: New `ColorSchemePicker` component — a popover palette button that lets users switch the active color scheme at runtime; supports 18 built-in schemes matching shadcn/create.
+- **Color schemes**: Added `neutral`, `amber`, `cyan`, `emerald`, `fuchsia`, `green`, `indigo`, `lime`, `pink`, `rose`, `sky`, `teal`, and `yellow` color schemes in `themes.css`, in addition to the existing `blue`, `orange`, `purple`, `red`, and `violet` palettes.
+- **AppStore**: Added `colorScheme` state and `setColorScheme` action to `app-store` for globally managing the active color scheme.
+
+### Changed
+
+- **themes.css**: Migrated color-scheme CSS from `.theme-*` class selectors to `[data-color-scheme="*"]` attribute selectors; dark variants now use `.dark[data-color-scheme="*"]` flat rules instead of nested `@variant dark {}` blocks for better compatibility.
+- **ThemeProvider**: Updated to persist and apply `colorScheme` via the `data-color-scheme` attribute on the document root, in sync with `AppStore`.
+- **TopNavLayout / AnonymousHeader**: Added `items-center` to the sticky header flex row for correct vertical alignment.
+- **SearchMenu**: Updated keyboard-shortcut search menu layout and styling.
+- **UI components**: Minor consistency and accessibility improvements across `AlertDialog`, `Button`, `Calendar`, `Card`, `Carousel`, `Combobox`, `Command`, `Dialog`, `Drawer`, `InputGroup`, `Sheet`, `Sidebar`, and `ToggleGroup`.
+- **CI/CD**: Updated `ci.yml`, `deploy-docs.yml`, and `release.yml` GitHub Actions workflows.
+- **Build**: Updated `tsup.config.ts`, `tsup.vendor.config.ts`, `vite.config.ts`, and `vite.css.config.ts`.
+- **Tailwind**: Updated `tailwind.config.js` for new color-scheme token support.
+- **Docs**: Added documentation for all new components (`Attachment`, `Bubble`, `Marker`, `Message`, `MessageScroller`, `ColorSchemePicker`); updated API overview, store, hooks, and components index.
+
 ## [0.1.7] - 2026-05-16
 
 ### Added

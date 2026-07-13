@@ -4,6 +4,7 @@ import { resolve } from 'path';
 
 // Separate Vite config just for CSS bundling
 export default defineConfig({
+  base: './',
   plugins: [tailwindcss()],
   build: {
     rollupOptions: {

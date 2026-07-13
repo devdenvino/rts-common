@@ -9,6 +9,7 @@ A complete reference of all available components in rts-common.
 | AppBase | Main application wrapper with authentication and theming | `@devdenvino/rts-common` |
 | Sidebar | Collapsible sidebar navigation | `@devdenvino/rts-common/components/shared` |
 | TopNav | Top navigation bar | `@devdenvino/rts-common/components/shared` |
+| ColorSchemePicker | Popover swatch picker for 18 color schemes | `@devdenvino/rts-common` |
 
 ## Form Components
 
@@ -83,6 +84,16 @@ A complete reference of all available components in rts-common.
 | Resizable | Resizable panels | `@devdenvino/rts-common/components/ui` |
 | Collapsible | Collapsible section | `@devdenvino/rts-common/components/ui` |
 | Accordion | Accordion | `@devdenvino/rts-common/components/ui` |
+
+## Messaging Components
+
+| Component | Description | Import |
+|-----------|-------------|--------|
+| Attachment | File attachment card with states and actions | `@devdenvino/rts-common/components/ui` |
+| Bubble | Chat bubble with variants and alignment | `@devdenvino/rts-common/components/ui` |
+| Marker | Timestamp / date separator label | `@devdenvino/rts-common/components/ui` |
+| Message | Chat message layout (avatar, content, header, footer) | `@devdenvino/rts-common/components/ui` |
+| MessageScroller | Auto-scrolling chat viewport | `@devdenvino/rts-common/components/ui` |
 
 ## Magic UI Components
 

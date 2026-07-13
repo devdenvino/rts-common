@@ -1,3 +1,4 @@
+import { useMemo, useEffect } from 'react';
 import { AuthProvider, useAutoSignin } from 'react-oidc-context';
 import type { AuthProviderProps } from 'react-oidc-context';
 import { getAppConfig } from '@/lib/helpers/functions';
@@ -15,7 +16,6 @@ import {
   isOidcCallback,
   getBaseRedirectUri,
 } from '@/lib/helpers/auth-redirect';
-import { useEffect } from 'react';
 import { TooltipProvider } from '@/components/ui';
 
 function App({
@@ -50,38 +50,45 @@ function App({
 
 export type AppBaseProps = {
   children: React.ReactNode;
-} & AuthProviderProps &
-  AppLayoutProps;
+} & AppLayoutProps;
 
 export default function AppBase({ children, ...appLayoutProps }: AppBaseProps) {
-  const config = getAppConfig('hub');
+  const oidcConfig = useMemo((): AuthProviderProps => {
+    const config = getAppConfig('hub');
+    const authority = config?.oidcConfig?.authority ?? '';
+    const client_id = config?.oidcConfig?.clientId ?? '';
 
-  const oidcConfig: AuthProviderProps = {
-    authority: config?.oidcConfig?.authority || '',
-    client_id: config?.oidcConfig?.clientId || '',
-    // Use base redirect URI without query params (OIDC spec compliant)
-    redirect_uri: getBaseRedirectUri(),
-    loadUserInfo: true, // Fetch additional user details from userinfo endpoint
-    extraQueryParams: {
-      kc_idp_hint: config?.oidcConfig?.kcIdpHint || '',
-    },
-    onSigninCallback: () => {
-      // Restore the original URL with query parameters
-      const originalUrl = restoreRedirectUrl();
+    if (!authority || !client_id) {
+      throw new Error(
+        '[rts-common] OIDC config is missing. Ensure window._env contains oidcConfig.authority and oidcConfig.clientId.',
+      );
+    }
 
-      if (originalUrl) {
-        // Navigate to the original URL
-        window.history.replaceState({}, document.title, originalUrl);
-      } else {
-        // Fallback: Remove OIDC query params but keep the hash
+    return {
+      authority,
+      client_id,
+      // Use base redirect URI without query params (OIDC spec compliant)
+      redirect_uri: getBaseRedirectUri(),
+      post_logout_redirect_uri: `${window.location.origin}/`,
+      loadUserInfo: true,
+      // Only include kc_idp_hint when explicitly configured — sending an empty
+      // string can cause some IDPs to reject or misroute the login request.
+      ...(config.oidcConfig.kcIdpHint && {
+        extraQueryParams: { kc_idp_hint: config.oidcConfig.kcIdpHint },
+      }),
+      onSigninCallback: () => {
+        // Restore the original URL the user was on before the auth redirect.
+        const originalUrl = restoreRedirectUrl();
         window.history.replaceState(
           {},
           document.title,
-          window.location.pathname + window.location.hash,
+          originalUrl ?? (window.location.pathname + window.location.hash),
         );
-      }
-    },
-  };
+      },
+    };
+  // window._env is loaded once before the app mounts and is never mutated.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <ThemeProvider defaultTheme="light">
