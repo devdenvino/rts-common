@@ -2,6 +2,7 @@ import type { Preview } from '@storybook/react-vite'
 import React from 'react';
 import '../src/index.css'
 import { ThemeProvider } from '../src/components/shared/theme/provider';
+import { setColorScheme, type ColorScheme } from '../src/store/app-store';
 
 // A wrapper component to bridge Storybook globals/addons with our ThemeProvider
 const ThemeWrapper = ({ children, context }: { children: React.ReactNode; context: any }) => {
@@ -35,8 +36,6 @@ const ThemeWrapper = ({ children, context }: { children: React.ReactNode; contex
   return (
     <ThemeProvider
       defaultTheme={isDark ? 'dark' : 'light'}
-      defaultThemeColor={themeColor.replace('theme-', '') as any}
-      themeStorageKey="storybook-theme" // Use a separate key to avoid conflicting with the main app's local storage
     >
       {/* Wrapper to apply the theme class to the immediate container of the story */}
       <div
@@ -51,11 +50,10 @@ const ThemeWrapper = ({ children, context }: { children: React.ReactNode; contex
 
 // Helper to sync props to the Provider, since Provider takes default* props which are only read on mount.
 // This component sits *inside* the Provider so it can use the context setters.
-import { useTheme, useThemeColor } from '../src/components/shared/theme/provider';
+import { useTheme } from '../src/components/shared/theme/provider';
 
 const SyncTheme = ({ isDark, themeColor }: { isDark: boolean, themeColor: string }) => {
   const { setTheme } = useTheme();
-  const { setThemeColor } = useThemeColor();
 
   React.useEffect(() => {
     setTheme(isDark ? 'dark' : 'light');
@@ -63,8 +61,8 @@ const SyncTheme = ({ isDark, themeColor }: { isDark: boolean, themeColor: string
 
   React.useEffect(() => {
     const colorName = themeColor.replace('theme-', '');
-    setThemeColor(colorName as any);
-  }, [themeColor, setThemeColor]);
+    setColorScheme(colorName as ColorScheme);
+  }, [themeColor]);
 
   return null;
 }
