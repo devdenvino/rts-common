@@ -1,6 +1,7 @@
-import { Store, useSelector } from "@tanstack/react-store"
-
-// ─── Types ────────────────────────────────────────────────────────────────────
+import { atom, createStore, getDefaultStore } from "jotai"
+import { useRef, useSyncExternalStore } from "react"
+import { appLayout } from "@/lib/contexts/atoms"
+import { LAYOUT_MODES as INTERNAL_LAYOUT_MODES } from "@/lib/constants"
 
 export type Theme = "dark" | "light" | "system"
 export type ColorScheme =
@@ -22,7 +23,6 @@ export interface AppState {
   layoutMode: LayoutMode
 }
 
-// ─── Constants ────────────────────────────────────────────────────────────────
 
 export const STORAGE_KEY = "rts:app-state"
 const BROADCAST_CHANNEL = "rts:app-state"
@@ -36,8 +36,6 @@ const VALID_COLOR_SCHEMES: ColorScheme[] = [
 const VALID_LAYOUT_MODES: LayoutMode[] = ["sidebar", "topnav"]
 
 const DEFAULT_STATE: AppState = { theme: "system", colorScheme: "neutral", layoutMode: "sidebar" }
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function isValidTheme(v: unknown): v is Theme {
   return typeof v === "string" && VALID_THEMES.includes(v as Theme)
@@ -70,22 +68,27 @@ function loadFromStorage(): AppState {
   }
 }
 
-// ─── Store ────────────────────────────────────────────────────────────────────
-
-export const appStore = new Store<AppState>(
+const _jotaiStore = createStore()
+const appStateAtom = atom<AppState>(
   typeof window !== "undefined" ? loadFromStorage() : DEFAULT_STATE,
 )
 
-// ─── Cross-tab sync ───────────────────────────────────────────────────────────
-// Uses BroadcastChannel for same-origin tabs + localStorage 'storage' event
-// as a fallback (covers cross-origin iframes / older browsers).
+export const appStore = {
+  get state(): AppState {
+    return _jotaiStore.get(appStateAtom)
+  },
+  setState(updater: (prev: AppState) => AppState): void {
+    _jotaiStore.set(appStateAtom, updater(_jotaiStore.get(appStateAtom)))
+  },
+  subscribe(callback: () => void): { unsubscribe: () => void } {
+    const unsub = _jotaiStore.sub(appStateAtom, callback)
+    return { unsubscribe: unsub }
+  },
+}
 
 if (typeof window !== "undefined") {
   let _syncInProgress = false
 
-  // BroadcastChannel: instant cross-tab sync (same origin)
-  // Guard with try/catch — BroadcastChannel is unavailable in some restricted
-  // environments (e.g. certain browser extensions, isolated iframes).
   let channel: BroadcastChannel | undefined
   try {
     channel = new BroadcastChannel(BROADCAST_CHANNEL)
@@ -99,22 +102,21 @@ if (typeof window !== "undefined") {
     // BroadcastChannel unavailable — cross-tab sync will rely on storage events only
   }
 
-  // Persist every store change to localStorage and broadcast to other tabs
-  appStore.subscribe(() => {
+  _jotaiStore.sub(appStateAtom, () => {
     if (_syncInProgress) return
+    const state = _jotaiStore.get(appStateAtom)
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(appStore.state))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
     } catch {
       // localStorage unavailable (private browsing quota hit etc.) — ignore
     }
     try {
-      channel?.postMessage({ type: "state-update", state: appStore.state })
+      channel?.postMessage({ type: "state-update", state })
     } catch {
       // postMessage failed — ignore
     }
   })
 
-  // Storage event: fallback for cross-origin scenarios (e.g. dev with different ports)
   window.addEventListener("storage", (event) => {
     if (event.key !== STORAGE_KEY || !event.newValue) return
     try {
@@ -137,8 +139,6 @@ if (typeof window !== "undefined") {
   })
 }
 
-// ─── Typed actions ────────────────────────────────────────────────────────────
-
 export function setTheme(theme: Theme): void {
   appStore.setState((s) => ({ ...s, theme }))
 }
@@ -149,11 +149,24 @@ export function setColorScheme(colorScheme: ColorScheme): void {
 
 export function setLayoutMode(layoutMode: LayoutMode): void {
   appStore.setState((s) => ({ ...s, layoutMode }))
+  getDefaultStore().set(
+    appLayout,
+    layoutMode === "sidebar"
+      ? INTERNAL_LAYOUT_MODES.SIDEBAR_OPEN
+      : INTERNAL_LAYOUT_MODES.DEFAULT,
+  )
 }
 
-// ─── React hook ───────────────────────────────────────────────────────────────
-
-/** Reactive selector over the shared app store. */
 export function useAppStore<T>(selector: (state: AppState) => T): T {
-  return useSelector(appStore, selector)
+  const selectorRef = useRef(selector)
+  selectorRef.current = selector
+
+  return useSyncExternalStore(
+    (onStoreChange) => {
+      const subscription = appStore.subscribe(onStoreChange)
+      return () => subscription.unsubscribe()
+    },
+    () => selectorRef.current(appStore.state),
+    () => selectorRef.current(DEFAULT_STATE),
+  )
 }

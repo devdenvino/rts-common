@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import * as React from "react"
-import { appStore, setTheme as storeSetTheme, STORAGE_KEY } from "@/store/app-store"
+import { useAppStore, setTheme as storeSetTheme, STORAGE_KEY } from "@/store/app-store"
 import type { Theme, ColorScheme } from "@/store/app-store"
 
 // Re-export Theme so consumers can import it from this module
@@ -72,9 +72,9 @@ function isEditableTarget(target: EventTarget | null) {
 }
 
 /**
- * Wraps the app with theme support.  Theme state is backed by `appStore`
- * (TanStack Store + localStorage + BroadcastChannel), so it is automatically
- * shared across all MFE remotes (shared singleton) and cross-tab (broadcast).
+ * Wraps the app with theme support. Theme state is backed by `appStateAtom`
+ * (Jotai + localStorage + BroadcastChannel), so it is automatically shared
+ * across all MFE remotes (shared singleton) and cross-tab (broadcast).
  */
 export function ThemeProvider({
   children,
@@ -82,39 +82,43 @@ export function ThemeProvider({
   disableTransitionOnChange = true,
   ...props
 }: ThemeProviderProps) {
-  // Read from the shared app store (reactive via TanStack Store)
-  const [theme, setThemeLocal] = React.useState<Theme>(() => {
-    // Use a stored value only when the user has previously made an explicit
-    // choice (i.e. an entry exists in localStorage).  On the very first visit
-    // there is nothing saved, so we honour the caller’s `defaultTheme` prop.
+  // -- Reactive reads -- re-render only when the selected slice changes ------
+  const theme = useAppStore((s) => s.theme)
+  const colorScheme = useAppStore((s) => s.colorScheme)
+
+  // On the very first visit (nothing persisted yet) seed the atom with the
+  // caller's defaultTheme so the entire app starts from a consistent value.
+  // Also apply the theme and colorScheme synchronously to avoid flashing wrong theme.
+  React.useLayoutEffect(() => {
     try {
       const raw = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null
-      if (raw) {
-        const parsed = JSON.parse(raw) as { theme?: string }
-        if (parsed.theme === "dark" || parsed.theme === "light" || parsed.theme === "system") {
-          return parsed.theme as Theme
-        }
+      if (!raw) {
+        storeSetTheme(defaultTheme)
       }
-    } catch {}
-    return defaultTheme
-  })
+    } catch {
+      // localStorage unavailable -- ignore
+    }
 
-  const [colorScheme, setColorSchemeLocal] = React.useState<ColorScheme>(
-    () => appStore.state.colorScheme
-  )
-
-  // Keep local React state in sync when the store changes from another tab/remote
-  React.useEffect(() => {
-    const sub = appStore.subscribe(() => {
-      setThemeLocal(appStore.state.theme)
-      setColorSchemeLocal(appStore.state.colorScheme)
-    })
-    return () => sub.unsubscribe()
-  }, [])
+    // Apply theme and colorScheme synchronously to prevent flash of unstyled content
+    const root = document.documentElement
+    const currentTheme = theme
+    const currentColorScheme = colorScheme
+    
+    const resolvedTheme = currentTheme === "system" ? getSystemTheme() : currentTheme
+    root.classList.remove("light", "dark")
+    root.classList.add(resolvedTheme)
+    root.setAttribute("data-color-scheme", currentColorScheme)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // intentionally once on mount
 
   const setTheme = React.useCallback((nextTheme: Theme) => {
-    storeSetTheme(nextTheme)  // persists to localStorage + broadcasts
+    storeSetTheme(nextTheme) // persists to localStorage + broadcasts to other tabs
   }, [])
+
+  // Keep a ref so the keydown handler always sees the latest theme without
+  // being re-registered on every theme change.
+  const themeRef = React.useRef(theme)
+  React.useEffect(() => { themeRef.current = theme }, [theme])
 
   // Apply data-color-scheme attribute to <html> whenever colorScheme changes
   React.useEffect(() => {
@@ -166,7 +170,7 @@ export function ThemeProvider({
       if (isEditableTarget(event.target)) return
       if (event.key.toLowerCase() !== "d") return
 
-      const current = appStore.state.theme
+      const current = themeRef.current
       const next: Theme =
         current === "dark"
           ? "light"

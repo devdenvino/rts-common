@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.9] - 2026-07-14
+
+### Changed
+
+- **State management**: Migrated app-level shared state from TanStack Store to Jotai-backed store plumbing in `app-store`, while preserving the exported `appStore` API.
+- **Hook stability**: Updated `useAppStore` to subscribe via `useSyncExternalStore`, preventing stale selector-closure reads in long-lived consumers.
+- **Auth persistence**: Replaced the previous `@tanstack/db`-backed OIDC store adapter with a localStorage-backed implementation that keeps the same exported class and includes a one-time compatibility migration from legacy `oidc.user` payloads.
+
+### Breaking
+
+- **Dependencies**: `jotai` is now a required `peerDependency` for consumers.
+
 ## [0.1.8] - 2026-07-13
 
 ### Added

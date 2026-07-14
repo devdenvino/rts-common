@@ -7,12 +7,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAtom } from "jotai";
-import { appLayout } from "@/lib/contexts/atoms";
-import { LAYOUT_MODES } from "@/lib/constants";
+import { setLayoutMode, LAYOUT_MODES } from "@/store/app-store";
 
 export function LayoutSwitcher() {
-  const [, setAppLayout] = useAtom(appLayout);
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -23,18 +20,10 @@ export function LayoutSwitcher() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem
-          onClick={() => {
-            setAppLayout(LAYOUT_MODES.SIDEBAR_OPEN);
-          }}
-        >
+        <DropdownMenuItem onClick={() => setLayoutMode(LAYOUT_MODES.SIDEBAR)}>
           Modern
         </DropdownMenuItem>
-        <DropdownMenuItem
-          onClick={() => {
-            setAppLayout(LAYOUT_MODES.DEFAULT);
-          }}
-        >
+        <DropdownMenuItem onClick={() => setLayoutMode(LAYOUT_MODES.TOPNAV)}>
           Classic
         </DropdownMenuItem>
       </DropdownMenuContent>
