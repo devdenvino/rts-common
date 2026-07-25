@@ -1,10 +1,10 @@
-import { ChevronRight } from "lucide-react";
+import { ChevronRight } from 'lucide-react';
 
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+} from '@/components/ui/collapsible';
 import {
   SidebarGroup,
   // SidebarGroupLabel,
@@ -15,32 +15,24 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   useSidebar,
-} from "@/components/ui/sidebar";
-import { Link, useRouterState } from "@tanstack/react-router";
-import { useEffect, useState, useMemo } from "react";
-import { useAtom } from "jotai";
-import { memberDetails } from "@/lib/contexts/atoms";
-import { getNavLinks } from "../common/utils";
-import { useResourceAccess } from "@/lib/contexts/roles";
+} from '@/components/ui/sidebar';
+import { Link, useRouterState } from '@tanstack/react-router';
+import { useState, useMemo } from 'react';
+import { useAtom } from 'jotai';
+import { memberDetails } from '@/lib/contexts/atoms';
+import { getNavLinks } from '../common/utils';
+import { useResourceAccess } from '@/lib/contexts/roles';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui";
-import type { IAppNavContext, NavMenu } from "@/lib/models/types";
-
+} from '@/components/ui';
+import type { IAppNavContext, NavMenu } from '@/lib/models/types';
 export function SidebarNavItems({ menuItems }: IAppNavContext) {
-  const [, setValue] = useState("");
-
-  const router = useRouterState();
   const [member] = useAtom(memberDetails);
 
   const resourceAccess = useResourceAccess();
-
-  useEffect(() => {
-    setValue("");
-  }, [router?.location?.pathname]);
 
   // Use useMemo instead of useState to avoid infinite loops
   // This will recompute when dependencies change but won't cause re-renders
@@ -63,13 +55,36 @@ export function SidebarNavItems({ menuItems }: IAppNavContext) {
 function NavMenuItem({ item }: { item: NavMenu }) {
   const { open, isMobile } = useSidebar();
   const [subMenuOpen, setSubMenuOpen] = useState<boolean>(false);
+  const router = useRouterState();
 
-  if ((item.pageLinks || []).length > 0) {
+  // Compute active state from current pathname so the section auto-expands
+  // when navigating directly to any of its sub-routes.
+  const currentPath = router.location.pathname;
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
+  const isActiveSection = item.isActive || (item.pageLinks ?? []).some((link) => {
+    // Strip base-path prefix and trailing slashes before comparing.
+    const normalizedLink = link.href.replace(/^\//, '').replace(/\/$/, '');
+    return (
+      normalizedLink &&
+      currentPath.replace(/\/$/, '').includes(normalizedLink)
+    );
+  });
+
+  const [collapsibleOpen, setCollapsibleOpen] =
+    useState<boolean>(isActiveSection);
+
+  // Derive the effective open state so that active sections are always
+  // shown expanded (even when navigating directly to a sub-route) without
+  // needing a setState call inside an effect.
+  const effectiveOpen = collapsibleOpen || isActiveSection;
+
+  if ((item.pageLinks ?? []).length > 0) {
     return (
       <Collapsible
         key={item.title}
         asChild
-        defaultOpen={item.isActive}
+        open={effectiveOpen}
+        onOpenChange={setCollapsibleOpen}
         className="group/collapsible"
       >
         <SidebarMenuItem>
@@ -89,7 +104,7 @@ function NavMenuItem({ item }: { item: NavMenu }) {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
-                    side={isMobile ? "bottom" : "right"}
+                    side={isMobile ? 'bottom' : 'right'}
                     align="end"
                     sideOffset={4}
                   >

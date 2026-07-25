@@ -40,6 +40,7 @@ export type AppConfig = {
   };
   statusPage?: string;
   profilePage?: string;
+  settingsPage?: string;
   poweredBy?: string;
   apps?: {
     [appName: string]: AppConfig;

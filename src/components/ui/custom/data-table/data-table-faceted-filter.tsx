@@ -26,6 +26,13 @@ export interface DataTableFacetedFilterOption {
   icon?: React.ComponentType<{
     className?: string;
   }>;
+  /**
+   * Server-supplied count for this option.
+   * When provided, this is displayed instead of the client-side facet count.
+   * Required for server-side tables (manualPagination / manualFiltering) where
+   * getFacetedUniqueValues() only sees the current page.
+   */
+  count?: number;
 }
 
 interface DataTableFacetedFilterProps<TData, TValue> {
@@ -158,9 +165,11 @@ export function DataTableFacetedFilter<TData, TValue>({
                       <option.icon className='mr-2 h-4 w-4 text-muted-foreground' />
                     )}
                     <span>{option.label}</span>
-                    {facets?.get(option.value) && (
+                    {(option.count !== undefined
+                      ? option.count > 0
+                      : facets?.get(option.value)) && (
                       <span className='ml-auto flex h-4 w-4 items-center justify-center font-mono text-xs'>
-                        {facets.get(option.value)}
+                        {option.count ?? facets?.get(option.value)}
                       </span>
                     )}
                   </CommandItem>

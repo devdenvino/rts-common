@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui';
 import { Link } from '@tanstack/react-router';
-import { BadgeInfo, LogOut, UserRound } from 'lucide-react';
+import { BadgeInfo, LogOut, Settings2, UserRound } from 'lucide-react';
 import { useAuth } from 'react-oidc-context';
 import { getAppConfig, getInitials } from '@/lib/helpers/functions';
 import { ThemeColorToggle } from '@/components/shared/theme/themeColorToggle';
@@ -70,6 +70,14 @@ export function ProfileDropdown(
           <DropdownMenuItem>
             <IconStethoscope />
             <DropdownMenuItem>Status</DropdownMenuItem>
+          </DropdownMenuItem>
+        </Link>
+      )}
+      {appConfig?.settingsPage && (
+        <Link to={appConfig?.settingsPage}>
+          <DropdownMenuItem>
+            <Settings2 />
+            <DropdownMenuItem>Settings</DropdownMenuItem>
           </DropdownMenuItem>
         </Link>
       )}

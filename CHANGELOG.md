@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.10] - 2026-07-25
+
+### Added
+
+- **ProfileDropdown — Settings page**: Added `settingsPage` to `AppConfig` type. When `appConfig.settingsPage` is set, a **Settings** menu item (with `Settings2` icon) is rendered in the profile dropdown between the Status and About entries.
+- **UI exports**: Exported `attachment`, `bubble`, `combobox`, `direction`, `marker`, `message`, `message-scroller`, and `native-select` components from the package root (`src/components/ui/index.ts`), making them available to consumers without deep imports.
+
+### Changed
+
+- **SidebarNavItems — active-section auto-expand**: The collapsible sidebar section now automatically opens when the current route matches any of its sub-links (direct navigation, deep-link, or browser back/forward). The previous `defaultOpen={item.isActive}` prop was replaced with a controlled `open` / `onOpenChange` pair driven by route state, so the section stays expanded as the user navigates within it.
+- **DataTableFacetedFilter — server-side counts**: `DataTableFacetedFilterOption` now accepts an optional `count?: number` field. When provided, this server-supplied total is displayed instead of the client-side `getFacetedUniqueValues()` count, enabling correct badge counts for server-paginated / server-filtered tables.
+
+### Fixed
+
+- **ProfileDropdown**: Removed unused `Bell` icon import that was introduced alongside the Settings entry.
+- **SidebarNavItems**: Removed a no-op `useState('') + useEffect` pair (from `SidebarNavItems`) that served only to trigger re-renders on route change — `useRouterState()` already provides reactive state. Also replaced the `useEffect` + `setCollapsibleOpen` anti-pattern in `NavMenuItem` with a derived `effectiveOpen` computation, eliminating synchronous `setState` inside effects.
+
 ## [0.1.9] - 2026-07-14
 
 ### Changed
