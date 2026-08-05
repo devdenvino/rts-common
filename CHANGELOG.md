@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.12] - 2026-08-05
+
+### Changed
+
+- **Notifications theme resolution**: Updated `Notifications` to resolve `theme === "system"` against the current OS color-scheme and pass the resolved value to Novu `Inbox` appearance, so dark mode styling applies correctly when users select system theme.
+- **Sidebar inset overflow behavior**: Added `overflow-y-hidden` to `SidebarInset` in `SidebarLayout` to prevent parent-level vertical overflow conflicts while preserving scrolling within the inner content container.
+- **Faceted filter option layout**: Refined `DataTableFacetedFilter` option row layout so labels use flexible width and count badges align consistently at the row end.
+
 ## [0.1.11] - 2026-08-05
 
 ### Added

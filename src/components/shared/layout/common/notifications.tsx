@@ -108,7 +108,16 @@ function NotificationInbox({ setOpen }: { setOpen: (open: boolean) => void }) {
 export function Notifications() {
   const appConfig = getAppConfig('');
   const [open, setOpen] = useState(false);
-  const { themeName } = useTheme();
+  const { theme } = useTheme();
+  // resolve "system" to the actual OS preference
+  const resolvedTheme = theme === 'system'
+    ? (
+        typeof window !== 'undefined' &&
+        window.matchMedia('(prefers-color-scheme: dark)').matches
+          ? 'dark'
+          : 'light'
+      )
+    : theme;
   const { user } = useAuth();
   const sessionPath = appConfig?.novu?.sessionPath;
   const { data: session, isLoading: sessionLoading } = useNovuSession(sessionPath);
@@ -146,7 +155,7 @@ export function Notifications() {
         subscriberHash={subscriberHash}
         backendUrl={appConfig.novu.backendUrl}
         socketUrl={appConfig.novu.socketUrl}
-        appearance={{ baseTheme: themeName === 'dark' ? dark : undefined }}
+        appearance={{ baseTheme: resolvedTheme === 'dark' ? dark : undefined }}
       >
         <NotificationInbox setOpen={setOpen} />
       </Inbox>
