@@ -77,6 +77,9 @@ export {
   type UserProfile,
 } from '@/hooks/use-auth';
 
+// Export TooltipProvider so remotes can reference it without deep path imports
+export { TooltipProvider } from "@/components/ui/tooltip";
+
 // Export navigation context
 export { AppNavProvider, useAppNav } from "@/lib/contexts/navigation-context";
 

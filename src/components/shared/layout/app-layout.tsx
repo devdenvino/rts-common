@@ -2,7 +2,7 @@ import { type AppSidebarProps } from "@/components/shared/layout/sidenav";
 import SidebarLayout from "./sidenav/sidebar-layout";
 import { appLayout } from "@/lib/contexts/atoms";
 import { useAtomValue } from "jotai";
-import { Toaster } from "@/components/ui";
+import { Toaster, TooltipProvider } from "@/components/ui";
 import TopNavLayout from "./topnav/topnav-layout";
 
 export interface AppLayoutProps {
@@ -42,7 +42,7 @@ export function AppLayout({
   const appLayoutValue = useAtomValue(appLayout);
 
   if (isRemote === true) {
-    return children;
+    return <TooltipProvider>{children}</TooltipProvider>;
   }
 
   return (
@@ -56,11 +56,13 @@ export function AppLayout({
           },
         }}
       />
-      {appLayoutValue.startsWith("sidebar") ? (
-        <SidebarLayout sidebarProps={sidebarProps} {...props}>{children}</SidebarLayout>
-      ) : (
-        <TopNavLayout sidebarProps={sidebarProps} {...props}>{children}</TopNavLayout>
-      )}
+      <TooltipProvider>
+        {appLayoutValue.startsWith("sidebar") ? (
+          <SidebarLayout sidebarProps={sidebarProps} {...props}>{children}</SidebarLayout>
+        ) : (
+          <TopNavLayout sidebarProps={sidebarProps} {...props}>{children}</TopNavLayout>
+        )}
+      </TooltipProvider>
     </>
   );
 }

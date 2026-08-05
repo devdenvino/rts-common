@@ -19,6 +19,25 @@ import { getAppConfig } from '@/lib/helpers/functions';
 import { useAtomValue } from 'jotai';
 import { appLayout } from '@/lib/contexts/atoms';
 import { useAuth } from '@/hooks/use-auth';
+import { useApiClient } from '@/hooks/use-api';
+import { useQuery } from '@tanstack/react-query';
+
+interface NovuSession {
+  subscriberId: string;
+  subscriberHash: string;
+  applicationIdentifier: string;
+}
+
+function useNovuSession(sessionPath?: string) {
+  const api = useApiClient();
+  return useQuery<NovuSession>({
+    queryKey: ['novu-session'],
+    queryFn: () => api.get<NovuSession>(sessionPath!).then((r) => r.data),
+    enabled: Boolean(sessionPath),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+}
 
 function NotificationInbox({ setOpen }: { setOpen: (open: boolean) => void }) {
   const { counts } = useCounts({ filters: [{ read: false }] });
@@ -91,6 +110,8 @@ export function Notifications() {
   const [open, setOpen] = useState(false);
   const { themeName } = useTheme();
   const { user } = useAuth();
+  const sessionPath = appConfig?.novu?.sessionPath;
+  const { data: session, isLoading: sessionLoading } = useNovuSession(sessionPath);
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -108,11 +129,21 @@ export function Notifications() {
     return null;
   }
 
+  if (sessionPath && (sessionLoading || !session)) {
+    return null;
+  }
+
+  const subscriberId = session?.subscriberId ?? user.profile.sub;
+  const subscriberHash = session?.subscriberHash;
+  const applicationIdentifier =
+    session?.applicationIdentifier ?? appConfig.novu.applicationIdentifier;
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <Inbox
-        applicationIdentifier={appConfig.novu.applicationIdentifier}
-        subscriberId={user.profile.sub}
+        applicationIdentifier={applicationIdentifier}
+        subscriberId={subscriberId}
+        subscriberHash={subscriberHash}
         backendUrl={appConfig.novu.backendUrl}
         socketUrl={appConfig.novu.socketUrl}
         appearance={{ baseTheme: themeName === 'dark' ? dark : undefined }}

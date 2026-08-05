@@ -98,17 +98,17 @@ export function AppSidebar({
         </SidebarHeader>
       )}
       <SidebarContent>
-        {navItems.length > 0 && <SidebarNavItems menuItems={navItems} />}
-      </SidebarContent>
-      <SidebarContent>
-        <div className="mt-auto">
-          <div className="pb-0">
-            {endNavItems.length > 0 && (
-              <SidebarNavItems menuItems={endNavItems} />
-            )}
-            <SearchMenu />
-            <Notifications />
+        {navItems.length > 0 && (
+          <div className="flex-1 overflow-y-auto">
+            <SidebarNavItems menuItems={navItems} />
           </div>
+        )}
+        <div className="mt-auto">
+          {endNavItems.length > 0 && (
+            <SidebarNavItems menuItems={endNavItems} />
+          )}
+          <SearchMenu />
+          <Notifications />
         </div>
       </SidebarContent>
       <SidebarFooter>
