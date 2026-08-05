@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.11] - 2026-08-05
+
+### Added
+
+- **Novu HMAC authentication**: Added optional `sessionPath` to `AppConfig.novu` type. When configured, the `Notifications` component fetches a backend-issued session object (`subscriberId`, `subscriberHash`, `applicationIdentifier`) and passes all three fields to `<Inbox>`, enabling server-side HMAC subscriber verification. Falls back to OIDC `sub` and static `applicationIdentifier` when `sessionPath` is not set.
+- **`TooltipProvider` export**: `TooltipProvider` is now exported from the package root (`src/index.ts`), so remote micro-frontends can reference it without deep path imports.
+- **OIDC localStorage persistence**: Added `userStore: new WebStorageStateStore({ store: window.localStorage })` to the OIDC client configuration in `AppBase`, ensuring the user session survives page refreshes and hard reloads (aligns with the localStorage-backed store introduced in v0.1.9).
+
+### Changed
+
+- **AppLayout — `TooltipProvider` scope**: `TooltipProvider` is now rendered inside `AppLayout` (for both the `isRemote` and full layout paths), so all children receive a valid tooltip context regardless of layout variant. The corresponding import in `app-base.tsx` was updated to use the direct `@/components/ui/tooltip` path instead of the barrel export.
+- **Sidebar layout fix**: Removed a duplicate `<SidebarContent>` wrapper in `AppSidebar`. Nav items now render inside a single `<SidebarContent>` with `flex-1 overflow-y-auto` for proper scrolling, and bottom-anchored items (`endNavItems`, `SearchMenu`, `Notifications`) are correctly grouped with `mt-auto`.
+- **CSS variable cleanup**: Moved dark-mode chart variables (`--chart-1` through `--chart-5`) from `src/index.css` and `src/styles/variables.css` into `src/styles/themes.css` (under the `.dark` block) for a single source of truth.
+
 ## [0.1.10] - 2026-07-25
 
 ### Added

@@ -49,6 +49,7 @@ export type AppConfig = {
     applicationIdentifier: string;
     backendUrl: string;
     socketUrl: string;
+    sessionPath?: string;
   };
   otel?: {
     serviceName: string;

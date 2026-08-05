@@ -1,6 +1,7 @@
 import { useMemo, useEffect } from 'react';
 import { AuthProvider, useAutoSignin } from 'react-oidc-context';
 import type { AuthProviderProps } from 'react-oidc-context';
+import { WebStorageStateStore } from 'oidc-client-ts';
 import { getAppConfig } from '@/lib/helpers/functions';
 import { ThemeProvider } from '@/components/shared/theme';
 import '@/styles/themes.css';
@@ -10,13 +11,13 @@ import { Loading } from '../status-routes/loading';
 import { ErrorBoundary } from '../status-routes/error-boundary';
 import { SearchProvider } from '@/lib/contexts/search-context';
 import { GlobalDialogProvider } from '../dialog';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import {
   storeRedirectUrl,
   restoreRedirectUrl,
   isOidcCallback,
   getBaseRedirectUri,
 } from '@/lib/helpers/auth-redirect';
-import { TooltipProvider } from '@/components/ui';
 
 function App({
   children,
@@ -71,6 +72,7 @@ export default function AppBase({ children, ...appLayoutProps }: AppBaseProps) {
       redirect_uri: getBaseRedirectUri(),
       post_logout_redirect_uri: `${window.location.origin}/`,
       loadUserInfo: true,
+      userStore: new WebStorageStateStore({ store: window.localStorage }),
       // Only include kc_idp_hint when explicitly configured — sending an empty
       // string can cause some IDPs to reject or misroute the login request.
       ...(config.oidcConfig.kcIdpHint && {
